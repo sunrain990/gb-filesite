@@ -287,6 +287,208 @@ router.post('/packageall',function(req,res,next){
     });
 });
 
+//router.post('/packageallfiles',function(req,res,next){
+//    var scollectionid = req.body.scollectionid;
+//    if(scollectionid == undefined){
+//        return res.json({code:-1,text:'请传入scollectionid',data:{}});
+//    }
+//    var scollectiontitle = req.body.scollectiontitle;
+//
+//    Mysql.project.query("select file from schedule where id in (select scheduleid from scollection_schedule where scollectionid="+scollectionid+")",function(err,result){
+//        console.log(result,'--------------------- - - - - -- - - -- ');
+//        if(result.length != 0){
+//            var rere = result.filter(function(resulti){
+//                return resulti.file>0;
+//            });
+//            if(rere.length!=0){
+//
+//                Mysql.project.query('select file,title from scollection where id='+scollectionid,function(err,result){
+//                    console.log(result,'this is result');
+//                    if(result.length != 0){
+//                        var result0 = result[0];
+//                        scollectiontitle = result0.title;
+//                        if(result0.file == 0){
+//                            //return res.json({code:1,data:'有新的上传文件，需要重新打包！'});
+//                            //package();
+//                        }else{
+//                            console.log(result0.file,'this is result0.file');
+//                            Mysql.project.query('select * from file where id="'+result0.file+'"',function(err,result){
+//                                if(!err){
+//                                    console.log(result,'this is exsit file');
+//                                    res.json(
+//                                        {
+//                                            code:1,text:'没有最近新上传文件，无需重新打包！',
+//                                            data:{
+//                                                file:result[0],
+//                                                type:0
+//                                            }
+//                                        });
+//                                }else{
+//                                    res.json({code:-1,text:'查询file出错！',data:{}});
+//                                }
+//                            });
+//                            //return res.json({code:1,data:{doc:result0.file},text:'已打包且最近无人提交！'});
+//                        }
+//                    }else{
+//                        return res.json({code:-1,data:{},text:'没有该作业！'});
+//                    }
+//                });
+//
+//            }else{
+//                console.log('没有任何上传file文件1');
+//                res.json({code:-1,text:'没有任何上传file文件'});
+//            }
+//        }else{
+//            console.log('没有任何上传file文件');
+//            res.json({code:-1,text:'没有任何上传file文件'});
+//        }
+//    });
+//
+//
+//
+//
+//
+//    function package(){
+////select url from file where id in (select file from schedule where id in (select scheduleid from scollection_schedule where scollectionid=7))
+//        var querydownnames = 'select url from file where id in (select file from schedule where id in (select scheduleid from scollection_schedule where scollectionid='+scollectionid+'))';
+//        Mysql.project.query(querydownnames,function(err,result){
+//            if(!err){
+//
+//                if(result.length == 0){
+//                    return res.json({code:1,text:'该项目暂无人提交作业！'})
+//                }
+//                //response.json({code:1,msg:'this is test!'});
+//                //fops:'mkzip/2/url/'+urlsafeBase64Encode(url)
+//                //var url = 'http://7xnmfe.com1.z0.glb.clouddn.com/userid1_scheduleid3045M_M/叶根友毛笔行书2.0.rar';
+//
+//                var hmacSha1 = function(encodedFlags, secretKey) {
+//                    /*
+//                     *return value already encoded with base64
+//                     * */
+//                    var hmac = crypto.createHmac('sha1', secretKey);
+//                    hmac.update(encodedFlags);
+//                    return hmac.digest('base64');
+//                };
+//
+//                var base64ToUrlSafe = function(v) {
+//                    return v.replace(/\//g, '_').replace(/\+/g, '-');
+//                };
+//
+//                var urlsafeBase64Encode = function(jsonFlags) {
+//                    var encoded = new Buffer(jsonFlags).toString('base64');
+//                    return base64ToUrlSafe(encoded);
+//                };
+//
+//                var generatefop = function(arr){
+//                    var brr = arr.map(function(e){
+//                        return '/url/'+urlsafeBase64Encode(e.url);
+//                    });
+//                    var tempstr="";
+//                    brr.forEach(function(b){
+//                        tempstr+=b;
+//                    });
+//                    return tempstr;
+//                };
+//
+//                var saveas = function(str){
+//                    return '|saveas/'+ urlsafeBase64Encode(str)
+//                };
+//
+//                scollectiontitle = scollectiontitle+moment().format('YYYY-MM-DD-hh-mm-ss')+'files.zip';
+//                console.log('then1');
+//
+//                result.forEach(function(i){
+//                    console.log(i,'this is resulti');
+//                })
+//
+//                var post_data = {
+//                    bucket:'geminno',
+//                    key:'suninit', //这个key必须是空间中有的文件，没有实际意义
+//                    //fops:'mkzip/2/url/aHR0cDovLzd4bm1mZS5jb20xLnowLmdsYi5jbG91ZGRuLmNvbS9zY29ybjEuZ2lm|saveas/Z2VtaW5ubzp0dHQuemlw'
+//                    fops:'mkzip/2'+generatefop(result)+saveas('geminno:'+scollectiontitle)
+//                    ,
+//                    notifyURL:'http://121.41.41.46:8000/filesite/filespacked'
+//                    //notifyURL:'http://121.41.123.2:8000/filesite/testpost'
+//                };
+//
+//
+//
+//                console.log(post_data.fops,BUCKET,'this is fops');
+//                var content = qs.stringify(post_data);
+//                var signingStr = '/pfop/\n'+content;
+//                var sign = hmacSha1(signingStr,qiniuconfig.SECRET_KEY);
+//                var encodedSign = base64ToUrlSafe(sign);
+//                var accessToken = qiniuconfig.ACCESS_KEY+':'+encodedSign;
+//
+//                var post_options = {
+//                    host: 'api.qiniu.com',
+//                    port: '80',
+//                    path: '/pfop/',
+//                    method: 'post',
+//                    headers: {
+//                        'Content-Type': 'application/x-www-form-urlencoded',
+//                        Authorization: 'QBox '+ accessToken
+//                    }
+//                };
+//
+//                var post_req = http.request(post_options, function(response) {
+//                    response.setEncoding('utf8');
+//                    //console.log('STATUS: '+res.statusCode);
+//                    //console.log('HEADERS:' + JSON.stringify(res.headers));
+//
+//                    response.on('data', function (chunk) {
+//                        console.log('BODY: ',chunk);
+//                        var jsontmp = eval("("+chunk+")");
+//                        console.log(jsontmp);
+//                        //新建file对象
+//                        var msg = {
+//                            file:scollectiontitle,
+//                            url:'http://7xnmfe.com1.z0.glb.clouddn.com/'+scollectiontitle
+//                        };
+//                        Mysql.project.query('INSERT INTO file SET ?',msg,function(err,result){
+//                            if(!err){
+//                                console.log('this is fileresult --------->',result);
+//
+//                                var update = {
+//                                    file:result.insertId
+//                                };
+//                                Mysql.project.query('UPDATE scollection SET ? where id="'+scollectionid+'"',update,function(err,re){
+//                                    if(!err){
+//                                        console.log('this is projectresult------->',re);
+//
+//                                        res.json({code:1,text:'打包请求成功！',data:{
+//                                            downurl:'http://7xnmfe.com1.z0.glb.clouddn.com/'+scollectiontitle,
+//                                            persistentId:jsontmp.persistentId,
+//                                            //打包中
+//                                            type:1
+//                                        }});
+//                                    }else{
+//                                        res.json({code:-1,text:'更新作业file出错'});
+//                                    }
+//                                });
+//                            }else{
+//                                res.json({code:-1,text:'生成文件对象出错'})
+//                            }
+//                        });
+//                    });
+//                });
+//                console.log(JSON.stringify(post_req.headers));
+//                post_req.on('error',function(e){
+//                    console.log('problem with request: '+e.message);
+//                    return res.json({code:-1,text:'problem with request: '+e.message});
+//                });
+//                post_req.write(content);
+//                post_req.end();
+//
+//
+//            }else{
+//                res.json({code:-1,text:err});
+//            }
+//        });
+//    }
+//
+//});
+
 router.post('/packageallfiles',function(req,res,next){
     var scollectionid = req.body.scollectionid;
     if(scollectionid == undefined){
@@ -300,6 +502,7 @@ router.post('/packageallfiles',function(req,res,next){
             var rere = result.filter(function(resulti){
                 return resulti.file>0;
             });
+            console.log('this is rere!!!!,rere',rere);
             if(rere.length!=0){
 
                 Mysql.project.query('select file,title from scollection where id='+scollectionid,function(err,result){
@@ -309,7 +512,7 @@ router.post('/packageallfiles',function(req,res,next){
                         scollectiontitle = result0.title;
                         if(result0.file == 0){
                             //return res.json({code:1,data:'有新的上传文件，需要重新打包！'});
-                            package();
+                            package(rere);
                         }else{
                             console.log(result0.file,'this is result0.file');
                             Mysql.project.query('select * from file where id="'+result0.file+'"',function(err,result){
@@ -348,9 +551,17 @@ router.post('/packageallfiles',function(req,res,next){
 
 
 
-    function package(){
+    function package(arr){
+        var arrstr = ' (';
+        for(var i=0;i<arr.length;i++){
+            arrstr += arr[i]['file']+',';
+        }
+        arrstr = arrstr.substring(0,arrstr.length-1)+')';
+        console.log(arrstr,'this is arrstr');
+
+
 //select url from file where id in (select file from schedule where id in (select scheduleid from scollection_schedule where scollectionid=7))
-        var querydownnames = 'select url from file where id in (select file from schedule where id in (select scheduleid from scollection_schedule where scollectionid='+scollectionid+'))';
+        var querydownnames = 'select url from file where id in '+arrstr;
         Mysql.project.query(querydownnames,function(err,result){
             if(!err){
 
@@ -490,6 +701,8 @@ router.post('/packageallfiles',function(req,res,next){
 });
 
 
+
+
 router.post('/getnums',function(req,res,next){
     var scollectionid = req.body.scollectionid;
 
@@ -536,7 +749,7 @@ router.post('/packagealldocs',function(req,res,next){
                         scollectiontitle = result0.title;
                         if(result0.doc == 0){
                             //return res.json({code:1,data:'有新的上传文件，需要重新打包！'});
-                            package();
+                            package(rere);
                         }else{
                             console.log(result0.doc,'this is result0.doc');
                             Mysql.project.query('select * from file where id="'+result0.doc+'"',function(err,result){
@@ -575,9 +788,17 @@ router.post('/packagealldocs',function(req,res,next){
 
 
 
-    function package(){
+    function package(arr){
+        var arrstr = ' (';
+        for(var i=0;i<arr.length;i++){
+            arrstr += arr[i]['doc']+',';
+        }
+        arrstr = arrstr.substring(0,arrstr.length-1)+')';
+
 //select url from file where id in (select file from schedule where id in (select scheduleid from scollection_schedule where scollectionid=7))
-        var querydownnames = 'select url from file where id in (select doc from schedule where id in (select scheduleid from scollection_schedule where scollectionid='+scollectionid+'))';
+        var querydownnames = 'select url from file where id in '+arrstr;
+//select url from file where id in (select file from schedule where id in (select scheduleid from scollection_schedule where scollectionid=7))
+//        var querydownnames = 'select url from file where id in (select doc from schedule where id in (select scheduleid from scollection_schedule where scollectionid='+scollectionid+'))';
         Mysql.project.query(querydownnames,function(err,result){
             if(!err){
 
