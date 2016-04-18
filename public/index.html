@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+<head>
+    <meta charset="UTF-8">
+    <title>会员活跃度统计</title>
+    <script src="http://cdn.bootcss.com/jquery/2.1.4/jquery.min.js"></script>
+    <link href="http://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+    <script src="http://cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <link href="http://cdn.bootcss.com/toastr.js/latest/css/toastr.min.css" rel="stylesheet">
+    <script src="http://cdn.bootcss.com/toastr.js/latest/js/toastr.min.js"></script>
+    <script src="http://cdn.bootcss.com/magnific-popup.js/1.0.0/jquery.magnific-popup.min.js"></script>
+    <script src="http://cdn.bootcss.com/moment.js/2.10.6/moment.min.js"></script>
+    <script src="http://cdn.bootcss.com/angular.js/1.4.3/angular.min.js"></script>
+    <script src="js/gem.js"></script>
+    <script src="js/basics.js"></script>
+    <link rel="stylesheet" href="css/basics.css">
+</head>
+<body ng-controller="BDCtrl">
+    <!--<div style="width:180px" class="input-group">-->
+        <!--<input type="text" ng-keyup="searchUidKeyup($event)" placeholder="用户id" class="form-control form-control-" ng-model="searchUid">-->
+        <!--<span class="input-group-btn">-->
+            <!--<button ng-click="searchUserid()" type="button" class="btn btn-primary">-->
+              <!--<span aria-hidden="true" class="glyphicon glyphicon-search"></span>-->
+              <!--<span>ID</span>-->
+            <!--</button>-->
+         <!--</span>-->
+    <div class="row">
+        <div class="col-md-2">开始时间：</div>
+        <div class="col-md-2">结束时间：</div>
+        <div class="col-md-1">默认个数：</div>
+        <div class="col-md-2"></div>
+        <div class="col-md-3">
+
+        </div>
+        <div class="col-md-2">
+            私信总数：<span ng-bind="pmsg"></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2">
+            <input type="text" placeholder={{starttime}} class="form-control form-control-" ng-model="starttime">
+        </div>
+        <div class="col-md-2">
+            <input type="text" placeholder={{endtime}} class="form-control form-control-" ng-model="endtime">
+        </div>
+        <div class="col-md-1">
+            <input type="text" placeholder={{total}} class="form-control form-control-" ng-model="total">
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary" ng-click="rank()">查询</button>
+        </div>
+        <div class="col-md-3">
+
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary" ng-click="getprivate()">私信</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="row">
+                <div class="col-md-2">用户ID</div><div class="col-md-2">回答总数</div>
+            </div>
+            <div class="row" ng-repeat="askr in askranks">
+                <div class="col-md-2" ng-click="gotouser(askr.authorid)">{{askr.authorid}}</div>
+
+                <div class="col-md-2" ng-click="listfaqs(askr.authorid)">{{askr.cnt}}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="row">
+                <div class="col-md-2">用户ID</div><<div class="col-md-2">提问总数</div>
+            </div>
+            <div class="row" ng-repeat="askk in askrankk">
+                <div class="col-md-2" ng-click="gotouser(askk.authorid)">{{askk.authorid}}</div>
+                <div class="col-md-2">{{askk.cnt}}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="row">
+                <div class="col-md-2">faqID</div><div class="col-md-2"></div>
+            </div>
+            <div class="row">
+                <div class="col-md-2">
+                    <div class="row" ng-repeat="sl in secondlayers">
+                        <div class="col-md-10" ng-click="gotofaq(sl.faqid)">
+                            {{sl.faqid}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+<script>
+    var app = angular.module('app',['sun']);
+//    gem.initApp(app);
+////    app = angular.module('app');
+    app.controller('BDCtrl',function($scope,$http,$window){
+
+
+//        $scope.starttime = moment().day(1).format('YYYY-MM-DD');
+//        $scope.endtime = moment().day(1).format('YYYY-MM-DD');
+//        var endtime;
+
+        $scope.total = 10;
+
+        var getTime = function(st,en){
+            if(!st){
+                $scope.starttime = moment().day(-4).format('YYYY-MM-DD');
+            }else{
+                $scope.starttime = moment().day(st).format('YYYY-MM-DD');
+            }
+            if(!en){
+                $scope.endtime = moment().day(1).format('YYYY-MM-DD');
+            }else{
+                $scope.endtime = moment().day(en).format('YYYY-MM-DD');
+            }
+        };
+        getTime();
+
+
+        var getPmsg = function(){
+            var msg = {
+                total:$scope.total,
+                starttime:$scope.starttime,
+                endtime:$scope.endtime
+            };
+            $http.post('http://test.geminno.cn:8000/report/getpmsg',msg).success(function(data){
+                $scope.pmsg = data.count.count;
+            }).error(function(data){
+                console.log('error');
+            });
+        };
+        getPmsg();
+
+        var getList = function(){
+            var msg = {
+                total:$scope.total,
+                starttime:$scope.starttime,
+                endtime:$scope.endtime
+            }
+          $http.post('http://test.geminno.cn:8000/report/askrank',msg).success(function(data){
+              $scope.askranks = data.data;
+          }).error(function(data){
+              console.log('err');
+          });
+        };
+
+        var getListk = function(){
+            var msg = {
+                total:$scope.total,
+                starttime:$scope.starttime,
+                endtime:$scope.endtime
+            };
+            $http.post('http://test.geminno.cn:8000/report/askrankk',msg).success(function(data){
+                $scope.askrankk = data.data;
+            }).error(function(data){
+                console.log('err');
+            });
+        };
+
+
+        var getall = function(){
+            getList();
+            getListk();
+        };
+        getall();
+
+        $scope.listfaqs =function(authorid){
+            console.log(authorid);
+            var msg = {
+                id:authorid,
+                total:$scope.total,
+                starttime:$scope.starttime,
+                endtime:$scope.endtime
+            };
+            var getFaqidList = function(){
+                $http.post('http://test.geminno.cn:8000/report/getfaqlist',msg).success(function(data){
+                    $scope.secondlayers = data.data;
+                }).error(function(data){
+                    console.log('err');
+                });
+            };
+            getFaqidList();
+        };
+
+        $scope.gotofaq = function(id){
+            $window.open('http://www.geminno.cn//_pages/faq/faqDetails.html?faqid='+id,'_blank');
+        };
+
+        $scope.gotouser = function(id){
+            $window.open('http://www.geminno.cn//_pages/user/ucard.html?userid='+id,'_blank');
+        }
+
+        $scope.rank = function(){
+            var starttime = $scope.starttime;
+            var endtime = $scope.endtime;
+//            var msg = {
+//                starttime:starttime,
+//                endtime:endtime
+//            };
+            getall();
+        };
+
+        $scope.getprivate = function(){
+            getPmsg();
+        };
+    });
+
+</script>
+</html>

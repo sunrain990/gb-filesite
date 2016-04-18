@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Insert title here</title>
+    <link rel="stylesheet" type="text/css" href="css/reset.css" />
+    <link rel="stylesheet" type="text/css" href="css/layout.css" />
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css" />
+    <!--<link href="http://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">-->
+    <!--<link href='http://www.googlefonts.cn/fonts.php?font=dosis' rel='stylesheet' type='text/css'>-->
+    <script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery.contextmenu.r2.js"></script>
+    <!--<link href="//netdna.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">-->
+</head>
+<body>
+<div id="container" ng-controller="UpCtrl">
+    <!-- 页面层容器 -->
+    <div id="header">
+        <!-- 页面头部 -->
+        <a>file</a>
+        <span class="logo_s">s</span>
+        <span class="logo_i">i</span>
+        <span class="logo_t">t</span>
+        <span class="logo_e">e</span>
+    </div>
+    <div class="banner1 clearfix">
+        <!-- 菜单 -->
+        <form id="upload">
+             <!--上传-->
+             <!--这个div是上传文件按钮-->
+            <div id="upContainer" onmousemove=""
+                 class="choose banner1_btn">
+
+                <span id="pickfiles">
+                    <i class="fa fa-arrow-circle-o-up"></i>上传文件
+                </span>
+            </div>
+        </form>
+        <form>
+            <!--action="mkdir" id="mkdir" method="post"-->
+            <!-- 文件夹 -->
+            <!-- 这个div是新建按钮 -->
+            <div class="newfile banner1_btn" id="btn_wenjianjia" ng-click="mkdir()">
+                <i class="fa fa-file-o"></i> 新建文件夹
+            </div>
+        </form>
+    </div>
+    <div class="banner2 clearfix">
+        <!-- 目录 -->
+        <i class="changedir fa fa-arrow-left" title="后退" id="left1" ng-click="touchp()"></i>
+        <!-- 返回上级目录键 -->
+        <i class="changedir fa fa-arrow-right" title="前进" id="right1" ng-click="mkdirp('/a/b')"></i>
+        <!-- 后退键 -->
+        <i class="changedir fa fa-caret-down" title="列出记录"></i>
+        <!-- 列出记录 -->
+        <div class="directory clearfix" id="directory">
+            <span ng-repeat="dir in currentDir" class="dirspan" ng-click="listDF(dir,$index)">
+                /{{dir.name}}
+            </span>
+        </div>
+    </div>
+    <!-- 右键按钮（隐藏） Start -->
+    <div class="contextMenu" id="myMenu1">
+        <ul id="Menuid" class="contextMenu">
+            <li id="open"><i class="fa fa-folder-open-o"></i>打开</li>
+            <li id="xinjian"><i class="fa fa-file-o"></i>新建</li>
+            <li id="oname"><i class="fa fa-pencil-square-o"></i>重命名</li>
+            <li id="delete"><i class="fa fa-trash-o"></i>删除</li>
+        </ul>
+    </div>
+    <!-- 右键按钮 End -->
+
+    <div id="pagebody" class="clearfix">
+        <!-- 页面主体 -->
+
+        <div class="liebiao" id="liebiao" ng-repeat="df in currentDF track by $index" ng-dblclick="dblC(df)">
+            <i ng-class="{true:'fa fa-folder',false:'fa fa-file'}[df['url']==undefined]"></i>
+            <input class="filename" type="text" ng-model="df.name" ng-blur="rename(df)"/>
+            <div class="dir" style="display:none">
+                {{df.depths}}
+                {{df.type}}
+            </div>
+        </div>
+
+        <table class="table table-striped table-hover text-left"   style="margin-top:40px;display:none">
+            <thead>
+            <tr>
+                <th class="col-md-4">Filename</th>
+                <th class="col-md-2">Size</th>
+                <th class="col-md-6">Detail</th>
+            </tr>
+            </thead>
+            <tbody id="fsUploadProgress">
+            </tbody>
+        </table>
+
+        <div filelist></div>
+        <div upload></div>
+        <div class="row">
+            <p class="filelist" ng-repeat="file in $root.filelist" ng-click="$root.fileup()">
+                {{file.name}}
+                <i class="fa fa-remove" style="border: 2px solid white;margin-left: 5px;border-radius: 3px"></i>
+            </p>
+        </div>
+    </div>
+
+    <div id="footer">
+        <!-- 页面底部 -->
+    </div>
+</div>
+
+<script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="js/plupload/plupload.full.min.js"></script>
+<script type="text/javascript" src="js/plupload/i18n/zh_CN.js"></script>
+<script type="text/javascript" src="/js/ui.js"></script>
+<script type="text/javascript" src="/js/qiniu.js"></script>
+<script type="text/javascript" src="/js/highlight/highlight.js"></script>
+<!--<script type="text/javascript" src="/js/main.js"></script>-->
+<script src="http://cdn.bootcss.com/angular.js/1.4.3/angular.min.js"></script>
+
+<script>
+    var app = angular.module('app',[]);
+    app.factory('qUrl',function(){
+        var host = window.location.hostname;
+        console.log(host,'this is the host...');
+        if(host == "test.geminno.cn"){
+            return{
+                URL:'http://test.geminno.cn/project/index.php/api/',
+                SocketAddr:'ws://test.geminno.cn:5000',
+                NODE:'http://test.geminno.cn:5000',
+                NODE_FILE:'http://test.geminno.cn:8000/',
+                Technologies:[
+                    {id:1,name:'吐槽空间'},
+                    {id:182,name:'C语言专区'},
+                    {id:183,name:'C++专区'},
+                    {id:184,name:'Java技术专区'},
+                    {id:185,name:'Android技术专区'},
+                    {id:186,name:'ios苹果专区'}
+                ]
+            };
+        }else if(host == "www.geminno.cn"){
+            return{
+                URL:'http://www.geminno.cn/project/index.php/api/',
+                SocketAddr:'ws://121.41.123.2:5000',
+                NODE:'http://121.41.123.2:5000',
+                NODE_FILE:'http://121.41.123.2:8000/',
+                Technologies:[
+                    {id:1,name:'吐槽空间'},
+                    {id:186,name:'C语言专区'},
+                    {id:187,name:'C++专区'},
+                    {id:188,name:'Java技术专区'},
+                    {id:189,name:'Android技术专区'},
+                    {id:190,name:'ios苹果专区'}
+                ]
+            };
+        }else if(host == "115.28.91.11"){
+            return{
+                NODE_FILE:'http://115.28.91.11:8000/'
+            };
+        }else{
+            return {
+                NODE_FILE:'http://localhost:8000/'
+            };
+        }
+    });
+    app.controller('UpCtrl',function($scope,$http,$window,qUrl){
+        var rootD = {
+            name:'（根目录）',
+            children:[],
+            id:'',
+            depth:0
+        };
+        $scope.ups = [];
+
+        $scope.rootDir = [];
+
+        $scope.stree = [];
+
+        $scope.currentDF = [];
+
+        $scope.currentDir = [];
+
+        $scope.dblC = function(dir){
+            if(dir['url']){
+                $window.open(dir['url'],'_blank');
+            }else if(dir['children']){
+                $scope.currentDir.push(dir);
+                $scope.currentDF = dir['children'];
+            }else{
+                alert('进入目录失败！');
+            }
+        };
+
+        $scope.getList = function(){
+            var msg = {};
+            $http.post(qUrl.NODE_FILE+'filesite/getlist',msg)
+                    .success(function (data, status, headers, config) {
+                        if(data.data.dir){
+                            $scope.rootDir = data.data.dir;
+                            $scope.currentDF = $scope.rootDir[0]['children'];
+                            $scope.currentDir = data.data.dir;
+                            console.log(data.data.dir);
+                        }
+                        //等待stree列出后展现depth 1
+//                        $scope.listDF();
+                    }).error(function (data, status, headers, config) {
+                        console.log('后台错误');
+                    });
+        };
+        $scope.getList();
+
+        $scope.listDF = function(dir,index){
+            console.log(dir,index);
+            $scope.currentDir = $scope.currentDir.splice(0,index+1);
+            $scope.currentDF = dir['children'];
+        };
+
+        var currentDirStr = function(currentDir){
+            var currentDirS = "";
+            for(var i=0;i<currentDir.length;i++){
+                if(i==0)continue;
+                currentDirS += '/'+currentDir[i].name;
+            }
+            return currentDirS;
+        };
+        console.log(currentDirStr($scope.currentDir),'当前路径！');
+
+        $scope.mkdir = function(){
+//            $scope.currentDir.shift();
+
+            var dir = {
+                name:'My文件夹'+Math.random(),
+                children:[],
+                id:'',
+                depth:$scope.currentDir.length
+            };
+
+            var remDup = function(arr,_arr){
+                for(var i=0;i<arr['children'].length;i++){
+                    if(arr['children'][i]['name'] == _arr['name']){
+                        arr['children'][i] = _arr;
+                    }
+                }
+            };
+
+            var newDir = [];
+
+            var currentDir = $scope.currentDir;
+            console.log(currentDir);
+
+            for(var i=currentDir.length;i>0;i--){
+                if(i==currentDir.length){
+                    currentDir[i-1]['children'].push(dir);
+                }else{
+                    remDup(currentDir[i-1],currentDir[i]);
+                }
+            }
+
+            console.log(currentDir);
+//            newDir = currentDir.concat([dir]);
+//            currentDir.unshift(rootD);
+//            $scope.currentDir = currentDir;
+
+//            var dir = {
+//                name:'新建文件夹',
+//                children:[],
+//                id:'',
+//                depth:$scope.currentDir.length+1
+//            };
+//            var rootDir = [$scope.rootDir];
+//            var self;
+//            var str = 'self=rootDir';
+//            var tmp=[];
+//            for(var i= 0;i<$scope.currentDir.length;i++){
+//                str +='[0]["children"]';
+//                eval(str);
+//
+//                tmp = self.filter(function(item){return item['name'] == $scope.currentDir[i]['name']});
+//                if(tmp.length == 0){
+//                    self.push(dir);
+//                }
+//            }
+//            console.log($scope.rootDir);
+            var msg = {
+                currentDir:currentDir
+            };
+            console.log(msg,'<_______________------');
+            $http.post(qUrl.NODE_FILE+'filesite/mkdir', msg)
+                    .success(function (data, status, headers, config) {
+                        console.log(data.data);
+                    }).error(function (data, status, headers, config) {
+                        console.log('后台错误');
+                    });
+        };
+
+
+        $scope.mkdirp = function(dirStr){
+//            var currentDir = $scope.currentDir;
+            var msg = {
+//                currentDir:currentDir,
+                dirStr:dirStr
+            };
+            $http.post(qUrl.NODE_FILE+'filesite/mkdirp',msg)
+                    .success(function(data,status,headers,config){
+                        console.log(dirStr);
+                    }).error(function(data){
+                        console.log('后台错误');
+                    });
+        };
+
+        $scope.touchp = function(pathStr){
+            var msg = {};
+            $http.post(qUrl.NODE_FILE+'filesite/touchp',msg).success(function(data,status,headers,config){
+                console.log(data);
+            }).error(function(data,status,headers,config){
+
+            });
+        }
+
+        $scope.rename = function(dir){
+            console.log(dir);
+            var currentDir = $scope.currentDir;
+            var fromName;
+            var toName;
+            console.log(currentDir);
+
+            var msg = {
+                currentDir:currentDir
+            };
+            console.log(msg,'<_______________------');
+            $http.post(qUrl.NODE_FILE+'filesite/mkdir', msg)
+                    .success(function (data, status, headers, config) {
+                        console.log(data.data);
+                    }).error(function (data, status, headers, config) {
+                        console.log('后台错误');
+                    });
+
+//            for(var i=currentDir.length;i>0;i--){
+//                if(i==currentDir.length){
+//                    currentDir[i-1]['children'].push(dir);
+//                }else{
+//                    remDup(currentDir[i-1],currentDir[i]);
+//                }
+//            }
+        };
+
+        //创建文件
+        $scope.touch = function(domain,res,up){
+            var sourceLink = domain + res.key;
+
+            var dir = {
+                name:res.key,
+                children:[],
+                id:'',
+                type:'file',
+                url:sourceLink,
+                depth:$scope.currentDir.length
+            };
+
+            var remDup = function(arr,_arr){
+                for(var i=0;i<arr['children'].length;i++){
+                    if(arr['children'][i]['name'] == _arr['name']){
+                        arr['children'][i] = _arr;
+                    }
+                }
+            };
+
+            var newDir = [];
+
+            var currentDir = $scope.currentDir;
+            console.log(currentDir);
+
+            for(var i=currentDir.length;i>0;i--){
+                if(i==currentDir.length){
+                    currentDir[i-1]['children'].push(dir);
+                }else{
+                    remDup(currentDir[i-1],currentDir[i]);
+                }
+            }
+
+            console.log(currentDir);
+
+            var msg = {
+                currentDirS:currentDirStr($scope.currentDir),
+                currentDir:currentDir
+            };
+            $http.post(qUrl.NODE_FILE+'filesite/touch', msg)
+                    .success(function (data, status, headers, config) {
+                        console.log(data);
+                    }).error(function (data, status, headers, config) {
+                        console.log('后台错误');
+                    });
+        };
+
+        var uploader = Qiniu.uploader({
+            runtimes: 'html5,flash,html4',
+            browse_button: 'pickfiles',
+            container: 'upContainer',
+            drop_element: 'upContainer',
+            max_file_size: '100mb',
+            flash_swf_url: 'js/plupload/Moxie.swf',
+            dragdrop: true,
+            chunk_size: '4mb',
+            //uptoken_url: $('#uptoken_url').val(),
+            //domain: $('#domain').val(),
+            domain: 'http://7xnmfe.com1.z0.glb.clouddn.com/',
+            uptoken_url: "/uptoken",
+            get_new_uptoken: false,
+            // downtoken_url: '/downtoken',
+            // unique_names: true,
+            // save_key: true,
+            // x_vars: {
+            //     'id': '1234',
+            //     'time': function(up, file) {
+            //         var time = (new Date()).getTime();
+            //         // do something with 'time'
+            //         return time;
+            //     },
+            // },
+            auto_start: true,
+            init: {
+                'FilesAdded': function(up, files) {
+                    $('table').show();
+                    $('#success').hide();
+                    plupload.each(files, function(file) {
+                        var progress = new FileProgress(file, 'fsUploadProgress');
+                        progress.setStatus("等待...");
+                        progress.bindUploadCancel(up);
+                    });
+                },
+                'BeforeUpload': function(up, file) {
+                    var progress = new FileProgress(file, 'fsUploadProgress');
+                    var chunk_size = plupload.parseSize(this.getOption('chunk_size'));
+                    if (up.runtime === 'html5' && chunk_size) {
+                        progress.setChunkProgess(chunk_size);
+                    }
+                },
+                'UploadProgress': function(up, file) {
+                    var progress = new FileProgress(file, 'fsUploadProgress');
+                    var chunk_size = plupload.parseSize(this.getOption('chunk_size'));
+                    progress.setProgress(file.percent + "%", file.speed, chunk_size);
+                },
+                'UploadComplete': function() {
+                    $('#success').show();
+                },
+                'FileUploaded': function(up, file, info) {
+                    var progress = new FileProgress(file, 'fsUploadProgress');
+                    progress.setComplete(up, info);
+                    console.log('in file uploaded...');
+
+                    var domain = up.getOption('domain');
+                    var res = eval('('+info+')');
+                    var sourceLink = domain + res.key; //获取上传成功后的文件的Url
+                    console.log(domain,res.key,up);
+//                    console.log(domain,res,sourceLink);
+
+                    $scope.touch(domain,res,up);
+                },
+                'Error': function(up, err, errTip) {
+                    $('table').show();
+                    var progress = new FileProgress(err.file, 'fsUploadProgress');
+                    progress.setError();
+                    progress.setStatus(errTip);
+                }
+                 ,
+                 'Key': function(up, file) {
+                     console.log(up,file,'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk');
+                     var prefix = 'userzm_blockid10000_schoolid10000:/';
+                     var key = file.name+Math.random();
+                     // do something with key
+                     return key
+                 }
+            }
+        });
+
+        uploader.bind('FileUploaded', function(e) {
+            console.log('out file uploaded...');
+//            var msg = {
+//                currentDirS:currentDirStr($scope.currentDir),
+//                currentDir:$scope.currentDir,
+//                filename: e.files[e.files.length-1].name,
+//                filetype: e.files[e.files.length-1].type,
+//                emsg:e
+//            };
+//            console.log(e);
+//            $http.post(qUrl.NODE_FILE+'filesite/upload', msg)
+//                .success(function (data, status, headers, config) {
+//                    console.log(data);
+//                }).error(function (data, status, headers, config) {
+//                    console.log('后台错误');
+//                });
+        });
+        $('#upContainer').on(
+                'dragenter',
+                function(e) {
+                    e.preventDefault();
+                    $('#container').addClass('draging');
+                    e.stopPropagation();
+                }
+        ).on('drop', function(e) {
+                    e.preventDefault();
+                    $('#container').removeClass('draging');
+                    e.stopPropagation();
+                }).on('dragleave', function(e) {
+                    e.preventDefault();
+                    $('#container').removeClass('draging');
+                    e.stopPropagation();
+                }).on('dragover', function(e) {
+                    e.preventDefault();
+                    $('#container').addClass('draging');
+                    e.stopPropagation();
+                });
+
+
+
+        $('#show_code').on('click', function() {
+            $('#myModal-code').modal();
+            $('pre code').each(function(i, e) {
+                hljs.highlightBlock(e);
+            });
+        });
+
+
+        $('body').on('click', 'table button.btn', function() {
+            $(this).parents('tr').next().toggle();
+        });
+
+
+        var getRotate = function(url) {
+            if (!url) {
+                return 0;
+            }
+            var arr = url.split('/');
+            for (var i = 0, len = arr.length; i < len; i++) {
+                if (arr[i] === 'rotate') {
+                    return parseInt(arr[i + 1], 10);
+                }
+            }
+            return 0;
+        };
+
+        $('#myModal-img .modal-body-footer').find('a').on('click', function() {
+            var img = $('#myModal-img').find('.modal-body img');
+            var key = img.data('key');
+            var oldUrl = img.attr('src');
+            var originHeight = parseInt(img.data('h'), 10);
+            var fopArr = [];
+            var rotate = getRotate(oldUrl);
+            if (!$(this).hasClass('no-disable-click')) {
+                $(this).addClass('disabled').siblings().removeClass('disabled');
+                if ($(this).data('imagemogr') !== 'no-rotate') {
+                    fopArr.push({
+                        'fop': 'imageMogr2',
+                        'auto-orient': true,
+                        'strip': true,
+                        'rotate': rotate,
+                        'format': 'png'
+                    });
+                }
+            } else {
+                $(this).siblings().removeClass('disabled');
+                var imageMogr = $(this).data('imagemogr');
+                if (imageMogr === 'left') {
+                    rotate = rotate - 90 < 0 ? rotate + 270 : rotate - 90;
+                } else if (imageMogr === 'right') {
+                    rotate = rotate + 90 > 360 ? rotate - 270 : rotate + 90;
+                }
+                fopArr.push({
+                    'fop': 'imageMogr2',
+                    'auto-orient': true,
+                    'strip': true,
+                    'rotate': rotate,
+                    'format': 'png'
+                });
+            }
+
+            $('#myModal-img .modal-body-footer').find('a.disabled').each(function() {
+
+                var watermark = $(this).data('watermark');
+                var imageView = $(this).data('imageview');
+                var imageMogr = $(this).data('imagemogr');
+
+                if (watermark) {
+                    fopArr.push({
+                        fop: 'watermark',
+                        mode: 1,
+                        image: 'http://www.b1.qiniudn.com/images/logo-2.png',
+                        dissolve: 100,
+                        gravity: watermark,
+                        dx: 100,
+                        dy: 100
+                    });
+                }
+
+                if (imageView) {
+                    var height;
+                    switch (imageView) {
+                        case 'large':
+                            height = originHeight;
+                            break;
+                        case 'middle':
+                            height = originHeight * 0.5;
+                            break;
+                        case 'small':
+                            height = originHeight * 0.1;
+                            break;
+                        default:
+                            height = originHeight;
+                            break;
+                    }
+                    fopArr.push({
+                        fop: 'imageView2',
+                        mode: 3,
+                        h: parseInt(height, 10),
+                        q: 100,
+                        format: 'png'
+                    });
+                }
+
+                if (imageMogr === 'no-rotate') {
+                    fopArr.push({
+                        'fop': 'imageMogr2',
+                        'auto-orient': true,
+                        'strip': true,
+                        'rotate': 0,
+                        'format': 'png'
+                    });
+                }
+            });
+
+            var newUrl = Qiniu.pipeline(fopArr, key);
+
+            var newImg = new Image();
+            img.attr('src', 'loading.gif');
+            newImg.onload = function() {
+                img.attr('src', newUrl);
+                img.parent('a').attr('href', newUrl);
+            };
+            newImg.src = newUrl;
+            return false;
+        });
+    });
+
+    app.directive('filelist',function($rootScope,$http,qUrl){
+        return{
+            restrict:'EA',
+            transclude:true,
+            template:'<div></div>',
+            link:function(scope,element,attrs){
+                var msg = {};
+                $http.post(qUrl.NODE_FILE+'filesite/getfilelist',msg)
+                        .success(function (data, status, headers, config) {
+                            console.log(data.data);
+                        }).error(function (data, status, headers, config) {
+                            console.log('getfile后台错误');
+                        });
+            }
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+body {
+	font-family: '微软雅黑';
+	font-size: 14px;
+	color: #444;
+	background: #f5f5f5;
+}
+
+#header {
+	height: 160px;
+	line-height: 160px;
+	background: rgb(133, 24, 133);
+	filter: progid:DXImageTransform.Microsoft.Gradient(startColorStr='#841885',endColorStr='#040640', gradientType='1');
+	background: linear-gradient(left, rgb(29, 11, 119), rgb(133, 24, 133) 34%, rgb(4, 6, 64) 96%);
+	background: -o-linear-gradient(left, rgb(29, 11, 119), rgb(133, 24, 133) 34%, rgb(4, 6, 64) 96%);
+	background: -ms-linear-gradient(left, rgb(29, 11, 119),rgb(133, 24, 133) 34%, rgb(4, 6, 64) 96%);
+	background: -moz-linear-gradient(left, rgb(29, 11, 119),rgb(133, 24, 133) 34%, rgb(4, 6, 64) 96%);
+	background: -webkit-linear-gradient(left, rgb(29, 11, 119),rgb(133, 24, 133) 34%, rgb(4, 6, 64) 96%);
+	box-shadow: 0 -5px 50px #3F256C inset;
+}
+
+#header a {
+	font-size: 70px;
+	margin-left: 400px;
+	color: #eee;
+	text-transform: uppercase;
+	letter-spacing: 10px;
+	text-shadow: 4px 3px 0 rgba(255, 255, 255, 0.1), 9px 8px 0 rgba(0, 0, 0, 0.15);
+}
+
+#header span {
+	font-size: 40px;
+	font-family: 'Dosis', sans-serif;
+}
+
+#header .logo_s {color: #CCFF99;}
+
+#header .logo_i {color: #ccffff;}
+
+#header .logo_t {color: #ffff99;}
+
+#header .logo_e {color: #ff9999;}
+
+.banner1 {
+	padding: 0 20px;
+	background: #eee;
+	border-top: 2px solid #250b52;
+	border-bottom: 1px solid #fdfdfd;
+}
+
+.banner1 form {
+	display: inline-block;
+	position: relative;
+	cursor: pointer;
+	float: left;
+	margin-right: 30px;
+}
+
+.banner1 form .banner1_btn {
+	border: 1px solid #eee;
+	height: 40px;
+	line-height: 40px;
+	padding: 0 10px;
+	transition: all 0.3s ease 0s;
+}
+
+.banner1 form .banner1_btn:hover,.banner1 form .banner1_btn_h{
+	border: 1px solid #ddd;
+	background: #ddd;
+}
+
+.fileInput {
+	position: absolute;
+	cursor: pointer;
+	height: 40px;
+	width: 20px;
+	top: 0;
+	left: 0;
+	padding: 0 10px;
+	filter: Alpha(opacity = 0);
+	opacity: 0;
+}
+/*banner1 end*/
+.banner2 {
+	height: 20px;
+	background: #eee;
+	border-top: 1px solid #dfdfdf;
+	padding: 6px 20px 8px;
+	box-shadow: 0 1px 3px #ccc;
+	border-bottom: 1px solid #ccc;
+}
+
+.banner2 .fa {
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	text-align: center;
+	line-height: 20px;
+	cursor: pointer;
+	border-radius: 50%;
+	margin: 0 10px;
+	border: 1px solid #444;
+	transition: all 0.3s ease 0s;
+	float: left;
+}
+
+.banner2 .fa:hover {
+	background: #444;
+	color: #fff;
+}
+
+.banner2 .directory {
+	display: inline-block;
+	margin-left: 20px;
+	border: 1px solid #aaa;
+	border-radius: 2px;
+	background: #fff;
+	color: #aaa;
+	box-shadow: 0 0 1px #ccc inset;
+	float: left;
+}
+
+.banner2 .directory span {
+	height: 16px;
+	padding: 2px 4px;
+	display: inline-block;
+	float: left;
+	position: relative;
+	cursor: pointer;
+	transition: all 0.3s ease 0s;
+}
+
+.banner2 .directory span:hover {
+	color: #444;
+}
+
+/*banner2 end*/
+#pagebody .liebiao {
+	float: left;
+	margin: 20px;
+}
+
+#pagebody .liebiao .fa {
+	display: block;
+	font-size: 80px;
+	text-align: center;
+	color: #ffcc66;
+	text-shadow: 1px 0px 2px #aaa;
+	cursor: pointer;
+}
+
+#pagebody .liebiao .fa:HOVER {
+	opacity: 0.8;
+	filter: Alpha(opacity = 80);
+	text-shadow: 0 0 2px #aaa;
+}
+
+#pagebody .liebiao .filename {
+	width: 120px;
+	font-family: '微软雅黑';
+	color: #444;
+	padding: 0;
+	text-align: center;
+	outline: none;
+	border: none;
+	background: #f5f5f5;
+}
+
+#pagebody .liebiao .filename:hover {
+	text-decoration: underline;
+	
+}
+
+/*foot*/
+#footer {
+	height: 40px;
+	width: 100%;
+	position: absolute;
+	bottom: 0px;
+	background: #eee;
+	border-top: 1px solid #ccc;
+	box-shadow: 0 -1px 3px #ccc;
+}
+
+/*right-click*/
+#jqContextMenu {
+	background: #fff;
+	opacity:.8;
+	filter: Alpha(opacity = 80);
+	position: relative;
+	box-shadow:1px 1px 3px #aaa;
+	border-radius:2px;
+}
+
+#jqContextMenu:BEFORE {
+	content:" ";
+	height:0;
+    width:0;
+    overflow: hidden;
+    font-size: 0;   
+    line-height: 0;
+    border-color:transparent transparent #fff transparent;
+    border-style:dashed dashed solid dashed;
+    border-width:8px;
+	position:absolute;
+	left:8px;
+	top:-16px;
+}
+
+#Menuid li {
+	padding:4px 10px;
+	margin:4px 0;
+	cursor: pointer;
+	transition: all 0.3s ease 0s;
+}
+
+#Menuid li:HOVER {
+	background: #87dffd;
+}
+
+#Menuid li .fa {
+	margin-right:4px;
+	display: inline-block;
+	width:20px;
+}

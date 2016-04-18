@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Insert title here</title>
+    <link rel="stylesheet" type="text/css" href="css/reset.css" />
+    <link rel="stylesheet" type="text/css" href="css/layout.css" />
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css" />
+    <!--<link href='http://www.googlefonts.cn/fonts.php?font=dosis' rel='stylesheet' type='text/css'>-->
+    <script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery.contextmenu.r2.js"></script>
+</head>
+<body>
+<div id="container" ng-controller="UpCtrl">
+    <!-- 页面层容器 -->
+    <div id="header">
+        <!-- 页面头部 -->
+        <a>file</a>
+        <span class="logo_s">s</span>
+        <span class="logo_i">i</span>
+        <span class="logo_t">t</span>
+        <span class="logo_e">e</span>
+    </div>
+    <div class="banner1 clearfix">
+        <!-- 菜单 -->
+        <form id="upload">
+             <!--上传-->
+             <!--这个div是上传文件按钮-->
+            <div id="upContainer" onmousemove=""
+                 class="choose banner1_btn">
+
+                <span id="pickfiles">
+                    <i class="fa fa-arrow-circle-o-up"></i>上传文件
+                </span>
+            </div>
+        </form>
+        <form>
+            <!--action="mkdir" id="mkdir" method="post"-->
+            <!-- 文件夹 -->
+            <!-- 这个div是新建按钮 -->
+            <div class="newfile banner1_btn" id="btn_wenjianjia" ng-click="mkdir()">
+                <i class="fa fa-file-o"></i> 新建文件夹
+            </div>
+        </form>
+    </div>
+    <div class="banner2 clearfix">
+        <!-- 目录 -->
+        <i class="changedir fa fa-arrow-left" title="后退" id="left1"></i>
+        <!-- 返回上级目录键 -->
+        <i class="changedir fa fa-arrow-right" title="前进" id="right1"></i>
+        <!-- 后退键 -->
+        <i class="changedir fa fa-caret-down" title="列出记录"></i>
+        <!-- 列出记录 -->
+        <div class="directory clearfix" id="directory">
+            <span ng-repeat="dir in currentDir" class="dirspan" ng-click="listDF(dir,$index)">
+                /{{dir.name}}
+            </span>
+        </div>
+    </div>
+    <!-- 右键按钮（隐藏） Start -->
+    <div class="contextMenu" id="myMenu1">
+        <ul id="Menuid" class="contextMenu">
+            <li id="open"><i class="fa fa-folder-open-o"></i>打开</li>
+            <li id="xinjian"><i class="fa fa-file-o"></i>新建</li>
+            <li id="oname"><i class="fa fa-pencil-square-o"></i>重命名</li>
+            <li id="delete"><i class="fa fa-trash-o"></i>删除</li>
+        </ul>
+    </div>
+    <!-- 右键按钮 End -->
+
+    <div id="pagebody" class="clearfix">
+        <!-- 页面主体 -->
+
+        <div class="liebiao" id="liebiao" ng-repeat="df in currentDF track by $index" ng-dblclick="dblC(df)">
+            <i ng-class="{true:'fa fa-folder',false:'fa fa-file'}[df['url']==undefined]"></i>
+            <input class="filename" type="text" ng-model="df.name" ng-blur="rename(df)"/>
+            <div class="dir" style="display:none">
+                {{df.depths}}
+                {{df.type}}
+            </div>
+        </div>
+
+        <table class="table table-striped table-hover text-left"   style="margin-top:40px;display:none">
+            <thead>
+            <tr>
+                <th class="col-md-4">Filename</th>
+                <th class="col-md-2">Size</th>
+                <th class="col-md-6">Detail</th>
+            </tr>
+            </thead>
+            <tbody id="fsUploadProgress">
+            </tbody>
+        </table>
+    </div>
+
+    <div id="footer">
+        <!-- 页面底部 -->
+    </div>
+</div>
+<!--<script type="text/javascript">
+
+    var forwardto;
+
+    /* js入口 Start */
+    $(function() {
+        /*上传样式*/
+        $('#btn_shangchuan').hover(function(){
+            $(this).parent('#upload').children('.choose').addClass('banner1_btn_h');
+        },function(){
+            $(this).parent('#upload').children('.choose').removeClass('banner1_btn_h');
+        });
+        process();
+    });
+    /*js入口 End */
+
+
+
+    /* 注册事件 Start */
+    function process() {
+        mkdir();
+        rep_discontent();
+        rep_historyDRs();
+        forward();
+        rename();
+        shangchuan();
+    };
+    /* 注册事件 End */
+
+    /* 上传按钮 Start */
+    var shangchuan = function() {
+        $("#btn_shangchuan").change(function() {
+            $("#upload").submit();
+        });
+    };
+    /* 上传按钮 End */
+
+    /* 新建文件夹 Start */
+    var rep_mkdir = function(){
+        $.ajax({
+            type : 'post',
+            url : 'mkdir',
+            dataType : 'json',
+            success : function(){
+                /* rep_historyDRs(); */
+                rep_discontent();
+            },
+            error : function(){
+                alert('能看到这个，这真是个意外!');
+            }
+        });
+    };
+
+    var mkdir = function() {
+        $("#btn_wenjianjia").click(rep_mkdir);
+    };
+    /* 新建文件夹 End*/
+
+    /* 前进后退按钮以及目标栏点击事件 Start */
+    var forward = function() {
+        $("#left1").live("click", function() {
+            $.ajax({
+                url : 'forwardto',
+                type : 'post',
+                data : {
+                    forwardto : "left"
+                },
+                dataType : 'json',
+                success : function() {
+                    rep_discontent();
+                    rep_historyDRs();
+                },
+                error : function() {
+                }
+            });
+        });
+        $("#right1").live("click", function() {
+            $.ajax({
+                url : 'forwardto',
+                type : 'post',
+                data : {
+                    forwardto : "right"
+                },
+                dataType : 'json',
+                success : function() {
+                    alert("hello");
+                }
+            });
+        });
+        /* 目录栏点击 Start */
+        $('.dirspan').live("click",function(){
+            var chosedr = $(this).find('a').html();
+            $.ajax({
+                type:'post',
+                dataType:'json',
+                url:'forwardto',
+                data:{
+                    chosedr : chosedr,
+                    forwardto : "drchosen"
+                },
+                success:function(){
+                    rep_historyDRs();
+                    rep_discontent();
+                },
+                error:function(){
+                }
+            });
+        });
+    };
+    /* 目录栏点击 End */
+    /* 前进后退按钮以及目标栏点击事件 End */
+
+    /* 获取当前路径下所有文件 Start */
+//    var rep_discontent = function() {
+//        $.ajax({
+//            url : 'getdirfil',
+//            type : "post",
+//            contentType : "application/json;charset=GBK",
+//            dataType : "json",
+//            success : function(getdirfil) {
+//                $("#pagebody").empty();
+//                for (var i = 0; i < getdirfil.length; i++) {
+//                    $("#pagebody").append('<div class="liebiao" id="liebiao"><i class="fa fa-folder"></i><input class="filename" type="text" value="'+getdirfil[i].name+'"/><div class="dir" style="display:none">'+getdirfil[i].status+'</div></div>');
+//                }
+//            },
+//            error : function() {
+//                alert('session超时，请重新登陆！！');
+//                window.location="login.jsp";
+//            }
+//        });
+//    };
+    /* 获取当前路径下所有文件 End */
+
+    /* 获得HistoryDRs Start */
+    var rep_historyDRs = function(){
+        $.ajax({
+            type : 'post',
+            url : 'historydrs',
+            dateType : 'json',
+            success : function(thi){
+                $("#directory").empty();
+                for(var i=0;i<thi.length;i++){
+                    if(i === 0){
+                        $("#directory").append('<span class="dirspan">'+thi[0]+"(Ftp根目录)"+'<a style="display:none	">'+thi[0]+'</a></span>');
+                    }else{
+                        $("#directory").append('<span class="dirspan">'+splitdr(thi[i])+'<a style="display:none">'+thi[i]+'</a></span>');
+                    }
+                }
+            },
+            error : function(){
+            }
+        });
+    };
+    /* 获得HistoryDRs End */
+
+
+    /* 改变路径 Start */
+    var changedr = function(){
+        $.ajax({
+            type : 'post',
+            url : 'changedr',
+            data : {
+                name : temp,
+                dir : dir
+            },
+            dataType : 'json',
+            success : function(){
+                rep_discontent();
+            },
+            error : function(){
+                alert('能看到这个，这是个意外!');
+            }
+        });
+    };
+    /* 改变路径 End */
+
+    /* 重命名 Start */
+    var rename = function() {
+        var name = {};
+        $(".filename").live("focus", (function() {
+            name.former = $(this).attr("value");
+        }));
+        $(".filename").live("change", (function() {
+            name.later = $(this).attr("value");
+            if (name.later == "" || name.later == " ") {
+                alert("文件名不能为空！");
+                window.location.reload();
+            }
+            $.ajax({
+                type : 'post',
+                url : 'changename',
+                data : {
+                    former : name.former,
+                    later : name.later
+                },
+                dataType : 'json',
+                success : function() {
+                    alert("修改成功");
+                },
+                error : function() {
+                    alert("失败");
+                }
+            });
+        }));
+    };
+    /* 重命名 End */
+
+    /* 列表中鼠标右击事件 */
+    $(".liebiao").live("mouseover", function() {
+        var temp1 = $(this).find(".filename").attr("value");
+        var dir1 = $(this).find(".dir").html();
+        var foc = $(this).find("input");
+        $("#pagebody").contextMenu('myMenu1', {
+            bindings : {
+                'open' : function() {
+                    $.ajax({
+                        type : 'post',
+                        url : 'changedr',
+                        data : {
+                            name : temp1,
+                            dir : dir1
+                        },
+                        dataType : 'json',
+                        success : function(){
+                            rep_historyDRs();
+                            rep_discontent();
+                        },
+                        error : function(){
+                            alert('不是文件夹，能看到这个，这是个意外!');
+                        }
+                    });
+                },
+                'xinjian' : rep_mkdir,
+                'oname' : function() {
+                    foc.focus();
+                },
+                'delete' : function() {
+                    var res = window.confirm("您要删除此目录以及所有目录下的文件么？");
+                    if (res) {
+                        $.ajax({
+                            type : 'post',
+                            url : 'deldr',
+                            data : {
+                                name : temp1,
+                                dir : dir1
+                            },
+                            dataType : 'json',
+                            success : function() {
+                                rep_discontent();
+                                window.location.reload();
+                            },
+                            error : function() {
+                            }
+                        });
+                    } else {
+                        /* window.alert("取消删除！"); */
+                    }
+                }
+            }
+        });
+    });
+    /* 列表中鼠标右击事件 End */
+
+    /* 切分directory Start */
+    /* /1234/新建文件夹/
+     11 = lastIndexOf("/");
+     /1234/新建文件夹 = substr(0,11);
+     5 = lastIndexOf("/");
+     /新建文件夹 = substr(5);
+     */
+    function splitdr(dire){
+        var lastIndex1 = dire.lastIndexOf("/");
+        var dire1 = dire.substr(0,lastIndex1);
+        var lastIndex2 = dire1.lastIndexOf("/");
+        return dire1.substr(lastIndex2);
+        /*
+         var aaab = "/abc/def/ghij/kkkkl/";
+         return (dire.substr(0,dire.lastIndexOf("/"))).substr(lastIndexOf("/"));
+         */
+    }
+    /* 切分directory End */
+
+    /* 列表项双击事件 Start */
+    $(".liebiao").live("dblclick", function() {
+        var temp = $(this).find(".filename").attr("value");
+        var dir = $(this).find(".dir").html();
+        $.ajax({
+            type : 'post',
+            url : 'changedr',
+            data : {
+                name : temp,
+                dir : dir
+            },
+            dataType : 'json',
+            success : function(){
+                rep_discontent();
+                rep_historyDRs();
+            },
+            error : function(){
+                alert('能看到这个，这是个意外!');
+            }
+        });
+    });
+    /* 列表项双击事件 End */
+
+</script>-->
+
+<script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="js/plupload/plupload.full.min.js"></script>
+<script type="text/javascript" src="js/plupload/i18n/zh_CN.js"></script>
+<script type="text/javascript" src="/js/ui.js"></script>
+<script type="text/javascript" src="/js/qiniu.js"></script>
+<script type="text/javascript" src="/js/highlight/highlight.js"></script>
+<!--<script type="text/javascript" src="/js/main.js"></script>-->
+<script src="http://cdn.bootcss.com/angular.js/1.4.3/angular.min.js"></script>
+
+<script>
+    var app = angular.module('app',[]);
+    app.factory('qUrl',function(){
+        return {
+            dev_url:'http://localhost:8000/'
+        };
+    });
+    app.controller('UpCtrl',function($scope,$http,$window,qUrl){
+        var rootD = {
+            name:'（根目录）',
+            children:[],
+            id:'',
+            depth:0
+        };
+        $scope.ups = [];
+
+        $scope.rootDir = [];
+
+        $scope.stree = [];
+
+        $scope.currentDF = [];
+
+        $scope.currentDir = [];
+
+        $scope.dblC = function(dir){
+            if(dir['url']){
+                $window.open(dir['url'],'_blank');
+            }else if(dir['children']){
+                $scope.currentDir.push(dir);
+                $scope.currentDF = dir['children'];
+            }else{
+                alert('进入目录失败！');
+            }
+        };
+
+        $scope.getList = function(){
+            $http.get(qUrl.dev_url+'filesite/getlist')
+                    .success(function (data, status, headers, config) {
+                        if(data.data.dir){
+                            $scope.rootDir = data.data.dir;
+                            $scope.currentDF = $scope.rootDir[0]['children'];
+                            $scope.currentDir = data.data.dir;
+                            console.log(data.data.dir);
+                        }
+                        //等待stree列出后展现depth 1
+//                        $scope.listDF();
+                    }).error(function (data, status, headers, config) {
+                        console.log('后台错误');
+                    });
+        };
+        $scope.getList();
+
+        $scope.listDF = function(dir,index){
+            console.log(dir,index);
+            $scope.currentDir = $scope.currentDir.splice(0,index+1);
+            $scope.currentDF = dir['children'];
+        };
+
+        var currentDirStr = function(currentDir){
+            var currentDirS = "";
+            for(var i=0;i<currentDir.length;i++){
+                if(i==0)continue;
+                currentDirS += '/'+currentDir[i].name;
+            }
+            return currentDirS;
+        };
+        console.log(currentDirStr($scope.currentDir),'当前路径！');
+
+        $scope.mkdir = function(){
+//            $scope.currentDir.shift();
+
+            var dir = {
+                name:'My文件夹'+Math.random(),
+                children:[],
+                id:'',
+                depth:$scope.currentDir.length
+            };
+
+            var remDup = function(arr,_arr){
+                for(var i=0;i<arr['children'].length;i++){
+                    if(arr['children'][i]['name'] == _arr['name']){
+                        arr['children'][i] = _arr;
+                    }
+                }
+            };
+
+            var newDir = [];
+
+            var currentDir = $scope.currentDir;
+            console.log(currentDir);
+
+            for(var i=currentDir.length;i>0;i--){
+                if(i==currentDir.length){
+                    currentDir[i-1]['children'].push(dir);
+                }else{
+                    remDup(currentDir[i-1],currentDir[i]);
+                }
+            }
+
+            console.log(currentDir);
+//            newDir = currentDir.concat([dir]);
+//            currentDir.unshift(rootD);
+//            $scope.currentDir = currentDir;
+
+//            var dir = {
+//                name:'新建文件夹',
+//                children:[],
+//                id:'',
+//                depth:$scope.currentDir.length+1
+//            };
+//            var rootDir = [$scope.rootDir];
+//            var self;
+//            var str = 'self=rootDir';
+//            var tmp=[];
+//            for(var i= 0;i<$scope.currentDir.length;i++){
+//                str +='[0]["children"]';
+//                eval(str);
+//
+//                tmp = self.filter(function(item){return item['name'] == $scope.currentDir[i]['name']});
+//                if(tmp.length == 0){
+//                    self.push(dir);
+//                }
+//            }
+//            console.log($scope.rootDir);
+            var msg = {
+                currentDir:currentDir
+            };
+            console.log(msg,'<_______________------');
+            $http.post(qUrl.dev_url+'filesite/mkdir', msg)
+                    .success(function (data, status, headers, config) {
+                        console.log(data.data);
+                    }).error(function (data, status, headers, config) {
+                        console.log('后台错误');
+                    });
+        };
+
+        $scope.rename = function(dir){
+            console.log(dir);
+            var currentDir = $scope.currentDir;
+            var fromName;
+            var toName;
+            console.log(currentDir);
+
+            var msg = {
+                currentDir:currentDir
+            };
+            console.log(msg,'<_______________------');
+            $http.post(qUrl.dev_url+'filesite/mkdir', msg)
+                    .success(function (data, status, headers, config) {
+                        console.log(data.data);
+                    }).error(function (data, status, headers, config) {
+                        console.log('后台错误');
+                    });
+
+//            for(var i=currentDir.length;i>0;i--){
+//                if(i==currentDir.length){
+//                    currentDir[i-1]['children'].push(dir);
+//                }else{
+//                    remDup(currentDir[i-1],currentDir[i]);
+//                }
+//            }
+        };
+
+        //创建文件
+        $scope.touch = function(domain,res,up){
+            var sourceLink = domain + res.key;
+
+            var dir = {
+                name:res.key,
+                children:[],
+                id:'',
+                type:'file',
+                url:sourceLink,
+                depth:$scope.currentDir.length
+            };
+
+            var remDup = function(arr,_arr){
+                for(var i=0;i<arr['children'].length;i++){
+                    if(arr['children'][i]['name'] == _arr['name']){
+                        arr['children'][i] = _arr;
+                    }
+                }
+            };
+
+            var newDir = [];
+
+            var currentDir = $scope.currentDir;
+            console.log(currentDir);
+
+            for(var i=currentDir.length;i>0;i--){
+                if(i==currentDir.length){
+                    currentDir[i-1]['children'].push(dir);
+                }else{
+                    remDup(currentDir[i-1],currentDir[i]);
+                }
+            }
+
+            console.log(currentDir);
+
+            var msg = {
+                currentDirS:currentDirStr($scope.currentDir),
+                currentDir:currentDir
+            };
+            $http.post(qUrl.dev_url+'filesite/touch', msg)
+                    .success(function (data, status, headers, config) {
+                        console.log(data);
+                    }).error(function (data, status, headers, config) {
+                        console.log('后台错误');
+                    });
+        };
+
+        var uploader = Qiniu.uploader({
+            runtimes: 'html5,flash,html4',
+            browse_button: 'pickfiles',
+            container: 'upContainer',
+            drop_element: 'upContainer',
+            max_file_size: '100mb',
+            flash_swf_url: 'js/plupload/Moxie.swf',
+            dragdrop: true,
+            chunk_size: '4mb',
+            //uptoken_url: $('#uptoken_url').val(),
+            //domain: $('#domain').val(),
+            domain: 'http://7xnmfe.com1.z0.glb.clouddn.com/',
+            uptoken_url: "/uptoken",
+            get_new_uptoken: false,
+            // downtoken_url: '/downtoken',
+            // unique_names: true,
+            // save_key: true,
+            // x_vars: {
+            //     'id': '1234',
+            //     'time': function(up, file) {
+            //         var time = (new Date()).getTime();
+            //         // do something with 'time'
+            //         return time;
+            //     },
+            // },
+            auto_start: true,
+            init: {
+                'FilesAdded': function(up, files) {
+                    $('table').show();
+                    $('#success').hide();
+                    plupload.each(files, function(file) {
+                        var progress = new FileProgress(file, 'fsUploadProgress');
+                        progress.setStatus("等待...");
+                        progress.bindUploadCancel(up);
+                    });
+                },
+                'BeforeUpload': function(up, file) {
+                    var progress = new FileProgress(file, 'fsUploadProgress');
+                    var chunk_size = plupload.parseSize(this.getOption('chunk_size'));
+                    if (up.runtime === 'html5' && chunk_size) {
+                        progress.setChunkProgess(chunk_size);
+                    }
+                },
+                'UploadProgress': function(up, file) {
+                    var progress = new FileProgress(file, 'fsUploadProgress');
+                    var chunk_size = plupload.parseSize(this.getOption('chunk_size'));
+                    progress.setProgress(file.percent + "%", file.speed, chunk_size);
+                },
+                'UploadComplete': function() {
+                    $('#success').show();
+                },
+                'FileUploaded': function(up, file, info) {
+                    var progress = new FileProgress(file, 'fsUploadProgress');
+                    progress.setComplete(up, info);
+                    console.log('in file uploaded...');
+
+                    var domain = up.getOption('domain');
+                    var res = eval('('+info+')');
+                    var sourceLink = domain + res.key; //获取上传成功后的文件的Url
+                    console.log(domain,res.key,up);
+//                    console.log(domain,res,sourceLink);
+
+                    $scope.touch(domain,res,up);
+                },
+                'Error': function(up, err, errTip) {
+                    $('table').show();
+                    var progress = new FileProgress(err.file, 'fsUploadProgress');
+                    progress.setError();
+                    progress.setStatus(errTip);
+                }
+                 ,
+                 'Key': function(up, file) {
+                     console.log(up,file,'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk');
+                     var key = file.name+Math.random();
+                     // do something with key
+                     return key
+                 }
+            }
+        });
+
+        uploader.bind('FileUploaded', function(e) {
+            console.log('out file uploaded...');
+//            var msg = {
+//                currentDirS:currentDirStr($scope.currentDir),
+//                currentDir:$scope.currentDir,
+//                filename: e.files[e.files.length-1].name,
+//                filetype: e.files[e.files.length-1].type,
+//                emsg:e
+//            };
+//            console.log(e);
+//            $http.post(qUrl.dev_url+'filesite/upload', msg)
+//                .success(function (data, status, headers, config) {
+//                    console.log(data);
+//                }).error(function (data, status, headers, config) {
+//                    console.log('后台错误');
+//                });
+        });
+        $('#upContainer').on(
+                'dragenter',
+                function(e) {
+                    e.preventDefault();
+                    $('#container').addClass('draging');
+                    e.stopPropagation();
+                }
+        ).on('drop', function(e) {
+                    e.preventDefault();
+                    $('#container').removeClass('draging');
+                    e.stopPropagation();
+                }).on('dragleave', function(e) {
+                    e.preventDefault();
+                    $('#container').removeClass('draging');
+                    e.stopPropagation();
+                }).on('dragover', function(e) {
+                    e.preventDefault();
+                    $('#container').addClass('draging');
+                    e.stopPropagation();
+                });
+
+
+
+        $('#show_code').on('click', function() {
+            $('#myModal-code').modal();
+            $('pre code').each(function(i, e) {
+                hljs.highlightBlock(e);
+            });
+        });
+
+
+        $('body').on('click', 'table button.btn', function() {
+            $(this).parents('tr').next().toggle();
+        });
+
+
+        var getRotate = function(url) {
+            if (!url) {
+                return 0;
+            }
+            var arr = url.split('/');
+            for (var i = 0, len = arr.length; i < len; i++) {
+                if (arr[i] === 'rotate') {
+                    return parseInt(arr[i + 1], 10);
+                }
+            }
+            return 0;
+        };
+
+        $('#myModal-img .modal-body-footer').find('a').on('click', function() {
+            var img = $('#myModal-img').find('.modal-body img');
+            var key = img.data('key');
+            var oldUrl = img.attr('src');
+            var originHeight = parseInt(img.data('h'), 10);
+            var fopArr = [];
+            var rotate = getRotate(oldUrl);
+            if (!$(this).hasClass('no-disable-click')) {
+                $(this).addClass('disabled').siblings().removeClass('disabled');
+                if ($(this).data('imagemogr') !== 'no-rotate') {
+                    fopArr.push({
+                        'fop': 'imageMogr2',
+                        'auto-orient': true,
+                        'strip': true,
+                        'rotate': rotate,
+                        'format': 'png'
+                    });
+                }
+            } else {
+                $(this).siblings().removeClass('disabled');
+                var imageMogr = $(this).data('imagemogr');
+                if (imageMogr === 'left') {
+                    rotate = rotate - 90 < 0 ? rotate + 270 : rotate - 90;
+                } else if (imageMogr === 'right') {
+                    rotate = rotate + 90 > 360 ? rotate - 270 : rotate + 90;
+                }
+                fopArr.push({
+                    'fop': 'imageMogr2',
+                    'auto-orient': true,
+                    'strip': true,
+                    'rotate': rotate,
+                    'format': 'png'
+                });
+            }
+
+            $('#myModal-img .modal-body-footer').find('a.disabled').each(function() {
+
+                var watermark = $(this).data('watermark');
+                var imageView = $(this).data('imageview');
+                var imageMogr = $(this).data('imagemogr');
+
+                if (watermark) {
+                    fopArr.push({
+                        fop: 'watermark',
+                        mode: 1,
+                        image: 'http://www.b1.qiniudn.com/images/logo-2.png',
+                        dissolve: 100,
+                        gravity: watermark,
+                        dx: 100,
+                        dy: 100
+                    });
+                }
+
+                if (imageView) {
+                    var height;
+                    switch (imageView) {
+                        case 'large':
+                            height = originHeight;
+                            break;
+                        case 'middle':
+                            height = originHeight * 0.5;
+                            break;
+                        case 'small':
+                            height = originHeight * 0.1;
+                            break;
+                        default:
+                            height = originHeight;
+                            break;
+                    }
+                    fopArr.push({
+                        fop: 'imageView2',
+                        mode: 3,
+                        h: parseInt(height, 10),
+                        q: 100,
+                        format: 'png'
+                    });
+                }
+
+                if (imageMogr === 'no-rotate') {
+                    fopArr.push({
+                        'fop': 'imageMogr2',
+                        'auto-orient': true,
+                        'strip': true,
+                        'rotate': 0,
+                        'format': 'png'
+                    });
+                }
+            });
+
+            var newUrl = Qiniu.pipeline(fopArr, key);
+
+            var newImg = new Image();
+            img.attr('src', 'loading.gif');
+            newImg.onload = function() {
+                img.attr('src', newUrl);
+                img.parent('a').attr('href', newUrl);
+            };
+            newImg.src = newUrl;
+            return false;
+        });
+    });
+</script>
+</body>
+</html>

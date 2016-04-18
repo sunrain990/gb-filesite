@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en" ng-app="app">
+<head>
+    <meta charset="UTF-8">
+    <title>七牛云存储 - JavaScript SDK</title>
+    <link href="favicon.ico" rel="shortcut icon">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="js/highlight/highlight.css">
+
+    <!--[if lt IE 9]>
+    <script src="js/Respond-1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+<div class="container" ng-controller="UpCtrl">
+    <!--<input id="domain" value="http://7xnmfe.com1.z0.glb.clouddn.com/">-->
+    <!--<input id="uptoken_url" value="/uptoken">-->
+    <div class="body">
+        <div id="container" style="height:300px;width:400px;background:green;">
+            <button class="btn btn-primary" id="pickfiles"></button>
+        </div>
+
+        <div style="display:none" id="success" class="col-md-12">
+            <div class="alert-success">
+                队列全部文件处理完毕
+            </div>
+        </div>
+        <div class="col-md-12 ">
+            <table class="table table-striped table-hover text-left"   style="margin-top:40px;display:none">
+                <thead>
+                <tr>
+                    <th class="col-md-4">Filename</th>
+                    <th class="col-md-2">Size</th>
+                    <th class="col-md-6">Detail</th>
+                </tr>
+                </thead>
+                <tbody id="fsUploadProgress">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="modal fade body" id="myModal-code" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">查看初始化代码</h4>
+                </div>
+                <div class="modal-body">
+            <pre><code>
+                //引入Plupload 、qiniu.js后
+                var uploader = Qiniu.uploader({
+                runtimes: 'html5,flash,html4',    //上传模式,依次退化
+                browse_button: 'pickfiles',       //上传选择的点选按钮，**必需**
+                uptoken_url: '/token',            //Ajax请求upToken的Url，**强烈建议设置**（服务端提供）
+                // uptoken : '<Your upload token>', //若未指定uptoken_url,则必须指定 uptoken ,uptoken由其他程序生成
+                // unique_names: true, // 默认 false，key为文件名。若开启该选项，SDK为自动生成上传成功后的key（文件名）。
+                // save_key: true,   // 默认 false。若在服务端生成uptoken的上传策略中指定了 `sava_key`，则开启，SDK会忽略对key的处理
+                domain: 'http://qiniu-plupload.qiniudn.com/',   //bucket 域名，下载资源时用到，**必需**
+                get_new_uptoken: false,  //设置上传文件的时候是否每次都重新获取新的token
+                container: 'container',           //上传区域DOM ID，默认是browser_button的父元素，
+                max_file_size: '100mb',           //最大文件体积限制
+                flash_swf_url: 'js/plupload/Moxie.swf',  //引入flash,相对路径
+                max_retries: 3,                   //上传失败最大重试次数
+                dragdrop: true,                   //开启可拖曳上传
+                drop_element: 'container',        //拖曳上传区域元素的ID，拖曳文件或文件夹后可触发上传
+                chunk_size: '4mb',                //分块上传时，每片的体积
+                auto_start: true,                 //选择文件后自动上传，若关闭需要自己绑定事件触发上传
+                init: {
+                'FilesAdded': function(up, files) {
+                plupload.each(files, function(file) {
+                // 文件添加进队列后,处理相关的事情
+                });
+                },
+                'BeforeUpload': function(up, file) {
+                // 每个文件上传前,处理相关的事情
+                },
+                'UploadProgress': function(up, file) {
+                // 每个文件上传时,处理相关的事情
+                },
+                'FileUploaded': function(up, file, info) {
+                // 每个文件上传成功后,处理相关的事情
+                // 其中 info 是文件上传成功后，服务端返回的json，形式如
+                // {
+                //    "hash": "Fh8xVqod2MQ1mocfI4S4KpRL6D98",
+                //    "key": "gogopher.jpg"
+                //  }
+                // 参考http://developer.qiniu.com/docs/v6/api/overview/up/response/simple-response.html
+
+                // var domain = up.getOption('domain');
+                // var res = parseJSON(info);
+                // var sourceLink = domain + res.key; 获取上传成功后的文件的Url
+                },
+                'Error': function(up, err, errTip) {
+                //上传出错时,处理相关的事情
+                },
+                'UploadComplete': function() {
+                //队列文件处理完毕后,处理相关的事情
+                },
+                'Key': function(up, file) {
+                // 若想在前端对每个文件的key进行个性化处理，可以配置该函数
+                // 该配置必须要在 unique_names: false , save_key: false 时才生效
+
+                var key = "";
+                // do something with key here
+                return key
+                }
+                }
+                });
+
+                // domain 为七牛空间（bucket)对应的域名，选择某个空间后，可通过"空间设置->基本设置->域名设置"查看获取
+
+                // uploader 为一个plupload对象，继承了所有plupload的方法，参考http://plupload.com/docs
+            </code></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade body" id="myModal-img" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">图片效果查看</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-body-wrapper text-center">
+                        <a href="" target="_blank" >
+                            <img src="" alt="" data-key="" data-h="">
+                        </a>
+                    </div>
+                    <div class="modal-body-footer">
+                        <div class="watermark">
+                            <span>水印控制：</span>
+                            <a href="#" data-watermark="NorthWest" class="btn btn-default">
+                                左上角
+                            </a>
+                            <a href="#" data-watermark="SouthWest" class="btn btn-default">
+                                左下角
+                            </a>
+                            <a href="#" data-watermark="NorthEast" class="btn btn-default">
+                                右上角
+                            </a>
+                            <a href="#" data-watermark="SouthEast" class="btn btn-default disabled">
+                                右下角
+                            </a>
+                            <a href="#" data-watermark="false" class="btn btn-default">
+                                无水印
+                            </a>
+                        </div>
+                        <div class="imageView2">
+                            <span>缩略控制：</span>
+                            <a href="#" data-imageview="large" class="btn btn-default disabled">
+                                大缩略图
+                            </a>
+                            <a href="#" data-imageview="middle" class="btn btn-default">
+                                中缩略图
+                            </a>
+                            <a href="#" data-imageview="small" class="btn btn-default">
+                                小缩略图
+                            </a>
+                        </div>
+                        <div class="imageMogr2">
+                            <span>高级控制：</span>
+                            <a href="#" data-imagemogr="left" class="btn btn-default no-disable-click" >
+                                逆时针
+                            </a>
+                            <a href="#" data-imagemogr="right" class="btn btn-default no-disable-click">
+                                顺时针
+                            </a>
+                            <a href="#" data-imagemogr="no-rotate" class="btn btn-default">
+                                无旋转
+                            </a>
+                        </div>
+                        <div class="text-warning">
+                            备注：小图片水印效果不明显，建议使用大图片预览水印效果
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <span class="pull-left">本示例仅演示了简单的图片处理效果，了解更多请点击</span>
+
+                    <a href="https://github.com/SunLn/qiniu-js-sdk" target="_blank" class="pull-left">本SDK文档</a>
+                    <span class="pull-left">或</span>
+
+                    <a href="http://developer.qiniu.com/docs/v6/api/reference/fop/image/" target="_blank" class="pull-left">七牛官方文档</a>
+
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <button class="btn btn-primary" ng-click="gotot()">提交测试</button>
+</div>
+
+
+
+
+<script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="js/plupload/plupload.full.min.js"></script>
+<script type="text/javascript" src="js/plupload/i18n/zh_CN.js"></script>
+<script type="text/javascript" src="/js/ui.js"></script>
+<script type="text/javascript" src="/js/qiniu.js"></script>
+<script type="text/javascript" src="/js/highlight/highlight.js"></script>
+<!--<script type="text/javascript" src="/js/main.js"></script>-->
+<script src="http://cdn.bootcss.com/angular.js/1.4.3/angular.min.js"></script>
+<script>
+    var app = angular.module('app',[]);
+    app.config(function($httpProvider) {
+        $httpProvider.defaults.headers.put['Content-Type'] = 'application/x-www-form-urlencoded';
+        $httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
+
+        // Override $http service's default transformRequest
+        $httpProvider.defaults.transformRequest = [function(data) {
+            /**
+             * The workhorse; converts an object to x-www-form-urlencoded serialization.
+             * @param {Object} obj
+             * @return {String}
+             */
+            var param = function(obj) {
+                var query = '';
+                var name, value, fullSubName, subName, subValue, innerObj, i;
+
+                for (name in obj) {
+                    value = obj[name];
+
+                    if (value instanceof Array) {
+                        for (i = 0; i < value.length; ++i) {
+                            subValue = value[i];
+                            fullSubName = name + '[' + i + ']';
+                            innerObj = {};
+                            innerObj[fullSubName] = subValue;
+                            query += param(innerObj) + '&';
+                        }
+                    } else if (value instanceof Object) {
+                        for (subName in value) {
+                            subValue = value[subName];
+                            fullSubName = name + '[' + subName + ']';
+                            innerObj = {};
+                            innerObj[fullSubName] = subValue;
+                            query += param(innerObj) + '&';
+                        }
+                    } else if (value !== undefined && value !== null) {
+                        query += encodeURIComponent(name) + '='
+                                + encodeURIComponent(value) + '&';
+                    }
+                }
+
+                return query.length ? query.substr(0, query.length - 1) : query;
+            };
+
+            return angular.isObject(data) && String(data) !== '[object File]'
+                    ? param(data)
+                    : data;
+        }];
+    });
+    app.controller('UpCtrl',function($scope,$http){
+        $scope.ups = [];
+        var uploader = Qiniu.uploader({
+            runtimes: 'html5,flash,html4',
+            browse_button: 'pickfiles',
+            container: 'container',
+            drop_element: 'container',
+            max_file_size: '100mb',
+            flash_swf_url: 'js/plupload/Moxie.swf',
+            dragdrop: true,
+            chunk_size: '4mb',
+            //uptoken_url: $('#uptoken_url').val(),
+            //domain: $('#domain').val(),
+            domain: 'http://7xnmfe.com1.z0.glb.clouddn.com/',
+            uptoken_url: "/uptoken",
+            get_new_uptoken: false,
+            // downtoken_url: '/downtoken',
+            // unique_names: true,
+            // save_key: true,
+            // x_vars: {
+            //     'id': '1234',
+            //     'time': function(up, file) {
+            //         var time = (new Date()).getTime();
+            //         // do something with 'time'
+            //         return time;
+            //     },
+            // },
+            auto_start: true,
+            init: {
+                'FilesAdded': function(up, files) {
+                    $('table').show();
+                    $('#success').hide();
+                    plupload.each(files, function(file) {
+                        var progress = new FileProgress(file, 'fsUploadProgress');
+                        progress.setStatus("等待...");
+                        progress.bindUploadCancel(up);
+                    });
+                },
+                'BeforeUpload': function(up, file) {
+                    var progress = new FileProgress(file, 'fsUploadProgress');
+                    var chunk_size = plupload.parseSize(this.getOption('chunk_size'));
+                    if (up.runtime === 'html5' && chunk_size) {
+                        progress.setChunkProgess(chunk_size);
+                    }
+                },
+                'UploadProgress': function(up, file) {
+                    var progress = new FileProgress(file, 'fsUploadProgress');
+                    var chunk_size = plupload.parseSize(this.getOption('chunk_size'));
+                    progress.setProgress(file.percent + "%", file.speed, chunk_size);
+                },
+                'UploadComplete': function() {
+                    $('#success').show();
+                },
+                'FileUploaded': function(up, file, info) {
+                    var progress = new FileProgress(file, 'fsUploadProgress');
+                    progress.setComplete(up, info);
+                },
+                'Error': function(up, err, errTip) {
+                    $('table').show();
+                    var progress = new FileProgress(err.file, 'fsUploadProgress');
+                    progress.setError();
+                    progress.setStatus(errTip);
+                }
+                // ,
+                // 'Key': function(up, file) {
+                //     var key = "";
+                //     // do something with key
+                //     return key
+                // }
+            }
+        });
+
+        uploader.bind('FileUploaded', function(e) {
+//            $scope.ups.push(e);
+            console.log('hello man,a file is uploaded1',e,'!!!!!',$scope.ups);
+        });
+        $('#container').on(
+                'dragenter',
+                function(e) {
+                    e.preventDefault();
+                    $('#container').addClass('draging');
+                    e.stopPropagation();
+                }
+        ).on('drop', function(e) {
+                    e.preventDefault();
+                    $('#container').removeClass('draging');
+                    e.stopPropagation();
+                }).on('dragleave', function(e) {
+                    e.preventDefault();
+                    $('#container').removeClass('draging');
+                    e.stopPropagation();
+                }).on('dragover', function(e) {
+                    e.preventDefault();
+                    $('#container').addClass('draging');
+                    e.stopPropagation();
+                });
+
+
+
+        $('#show_code').on('click', function() {
+            $('#myModal-code').modal();
+            $('pre code').each(function(i, e) {
+                hljs.highlightBlock(e);
+            });
+        });
+
+
+        $('body').on('click', 'table button.btn', function() {
+            $(this).parents('tr').next().toggle();
+        });
+
+
+        var getRotate = function(url) {
+            if (!url) {
+                return 0;
+            }
+            var arr = url.split('/');
+            for (var i = 0, len = arr.length; i < len; i++) {
+                if (arr[i] === 'rotate') {
+                    return parseInt(arr[i + 1], 10);
+                }
+            }
+            return 0;
+        };
+
+        $('#myModal-img .modal-body-footer').find('a').on('click', function() {
+            var img = $('#myModal-img').find('.modal-body img');
+            var key = img.data('key');
+            var oldUrl = img.attr('src');
+            var originHeight = parseInt(img.data('h'), 10);
+            var fopArr = [];
+            var rotate = getRotate(oldUrl);
+            if (!$(this).hasClass('no-disable-click')) {
+                $(this).addClass('disabled').siblings().removeClass('disabled');
+                if ($(this).data('imagemogr') !== 'no-rotate') {
+                    fopArr.push({
+                        'fop': 'imageMogr2',
+                        'auto-orient': true,
+                        'strip': true,
+                        'rotate': rotate,
+                        'format': 'png'
+                    });
+                }
+            } else {
+                $(this).siblings().removeClass('disabled');
+                var imageMogr = $(this).data('imagemogr');
+                if (imageMogr === 'left') {
+                    rotate = rotate - 90 < 0 ? rotate + 270 : rotate - 90;
+                } else if (imageMogr === 'right') {
+                    rotate = rotate + 90 > 360 ? rotate - 270 : rotate + 90;
+                }
+                fopArr.push({
+                    'fop': 'imageMogr2',
+                    'auto-orient': true,
+                    'strip': true,
+                    'rotate': rotate,
+                    'format': 'png'
+                });
+            }
+
+            $('#myModal-img .modal-body-footer').find('a.disabled').each(function() {
+
+                var watermark = $(this).data('watermark');
+                var imageView = $(this).data('imageview');
+                var imageMogr = $(this).data('imagemogr');
+
+                if (watermark) {
+                    fopArr.push({
+                        fop: 'watermark',
+                        mode: 1,
+                        image: 'http://www.b1.qiniudn.com/images/logo-2.png',
+                        dissolve: 100,
+                        gravity: watermark,
+                        dx: 100,
+                        dy: 100
+                    });
+                }
+
+                if (imageView) {
+                    var height;
+                    switch (imageView) {
+                        case 'large':
+                            height = originHeight;
+                            break;
+                        case 'middle':
+                            height = originHeight * 0.5;
+                            break;
+                        case 'small':
+                            height = originHeight * 0.1;
+                            break;
+                        default:
+                            height = originHeight;
+                            break;
+                    }
+                    fopArr.push({
+                        fop: 'imageView2',
+                        mode: 3,
+                        h: parseInt(height, 10),
+                        q: 100,
+                        format: 'png'
+                    });
+                }
+
+                if (imageMogr === 'no-rotate') {
+                    fopArr.push({
+                        'fop': 'imageMogr2',
+                        'auto-orient': true,
+                        'strip': true,
+                        'rotate': 0,
+                        'format': 'png'
+                    });
+                }
+            });
+
+            var newUrl = Qiniu.pipeline(fopArr, key);
+
+            var newImg = new Image();
+            img.attr('src', 'loading.gif');
+            newImg.onload = function() {
+                img.attr('src', newUrl);
+                img.parent('a').attr('href', newUrl);
+            };
+            newImg.src = newUrl;
+            return false;
+        });
+
+        var token;
+
+        $http.get('/uptoken').success(function(data){
+            $scope.uptoken = data.uptoken;
+            console.log(data.uptoken);
+        }).error(function(data){
+            console.log(data);
+        });
+
+
+        $scope.gotot = function(){
+            console.log('in goto');
+            var BUCKET = 'geminno';
+            var req = {
+                method: 'POST',
+                url: 'http://upload.qiniu.com',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': $scope.uptoken
+                },
+                data: {test: 'test'}
+            };
+
+            $http(req).then(function(data){
+
+            }, function(data){
+
+            });
+        };
+
+    });
+</script>
+</body>
+</html>

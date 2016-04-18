@@ -1,0 +1,14 @@
+/*覆盖bootstrap的pre标签*/
+pre {
+    background-color: inherit;
+    border: none;
+    /*border-radius: 4px;*/
+    color: inherit;
+    display: inline;
+    font-size: inherit;
+    line-height: 1.42857;
+    margin: 0;
+    padding: 0;
+    word-break: break-all;
+    word-wrap: break-word;
+}

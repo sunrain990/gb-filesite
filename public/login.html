@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+<head>
+    <meta charset="UTF-8">
+    <title>欢迎登陆</title>
+    <link rel="stylesheet" type="text/css" href="css/reset.css" />
+    <link rel="stylesheet" type="text/css" href="css/login.css" />
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css" />
+    <script src="http://cdn.bootcss.com/jquery/2.1.4/jquery.min.js"></script>
+    <script type="text/javascript" src="js/setuplabel.js"></script>
+    <link href="http://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+    <script src="http://cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <link href="http://cdn.bootcss.com/toastr.js/latest/css/toastr.min.css" rel="stylesheet">
+    <script src="http://cdn.bootcss.com/toastr.js/latest/js/toastr.min.js"></script>
+    <script src="http://cdn.bootcss.com/magnific-popup.js/1.0.0/jquery.magnific-popup.min.js"></script>
+    <script src="http://cdn.bootcss.com/angular.js/1.4.3/angular.min.js"></script>
+</head>
+<body ng-controller="LoginCtrl">
+
+<form class="login_form clearfix">
+    <ul>
+        <li>
+            <label ng-repeat="logreg in logregs" for={{logreg.labelid}} style="margin-left:20px;">
+                <input type="radio" ng-value="logreg" ng-change="changeR()" ng-model="$parent.selectedLogreg" id={{logreg.labelid}} />
+                {{logreg.name}}
+            </label>
+
+          <!--  <label for="radio-02" class="label_radio">
+                <i class="fa fa-circle-o"></i>
+                <input type="radio" value="1" id="radio-02" name="sample-radio" />
+                登录
+            </label>-->
+        </li>
+        <li ng-repeat="ins in inputs">
+            <label>{{ins.label}}</label>
+            <input type={{ins.type}} ng-model="models[ins.ngm]"/>
+            {{username}}
+        </li>
+
+    </ul>
+    <div class="login_but clearfix">
+        <button id="submit" ng-click="tijiao()">提交</button>
+        <input type="reset" />
+    </div>
+</form>
+
+</body>
+
+<script>
+    var app = angular.module('app',[]);
+    app.config(function($httpProvider) {
+        $httpProvider.defaults.headers.put['Content-Type'] = 'application/x-www-form-urlencoded';
+        $httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
+
+        // Override $http service's default transformRequest
+        $httpProvider.defaults.transformRequest = [function(data) {
+            /**
+             * The workhorse; converts an object to x-www-form-urlencoded serialization.
+             * @param {Object} obj
+             * @return {String}
+             */
+            var param = function(obj) {
+                var query = '';
+                var name, value, fullSubName, subName, subValue, innerObj, i;
+
+                for (name in obj) {
+                    value = obj[name];
+
+                    if (value instanceof Array) {
+                        for (i = 0; i < value.length; ++i) {
+                            subValue = value[i];
+                            fullSubName = name + '[' + i + ']';
+                            innerObj = {};
+                            innerObj[fullSubName] = subValue;
+                            query += param(innerObj) + '&';
+                        }
+                    } else if (value instanceof Object) {
+                        for (subName in value) {
+                            subValue = value[subName];
+                            fullSubName = name + '[' + subName + ']';
+                            innerObj = {};
+                            innerObj[fullSubName] = subValue;
+                            query += param(innerObj) + '&';
+                        }
+                    } else if (value !== undefined && value !== null) {
+                        query += encodeURIComponent(name) + '='
+                                + encodeURIComponent(value) + '&';
+                    }
+                }
+
+                return query.length ? query.substr(0, query.length - 1) : query;
+            };
+
+            return angular.isObject(data) && String(data) !== '[object File]'
+                    ? param(data)
+                    : data;
+        }];
+    });
+    app.factory('qUrl',function(){
+        var host = window.location.hostname;
+        if(host == "test.geminno.cn"){
+            return{
+                URL:'http://test.geminno.cn/project/index.php/api/',
+                SocketAddr:'ws://test.geminno.cn:5000',
+                NODE:'http://test.geminno.cn:5000',
+                NODE_FILE:'http://test.geminno.cn:8000/',
+                Technologies:[
+                    {id:1,name:'吐槽空间'},
+                    {id:182,name:'C语言专区'},
+                    {id:183,name:'C++专区'},
+                    {id:184,name:'Java技术专区'},
+                    {id:185,name:'Android技术专区'},
+                    {id:186,name:'ios苹果专区'}
+                ]
+            };
+        }else if(host == "www.geminno.cn"){
+            return{
+                URL:'http://www.geminno.cn/project/index.php/api/',
+                SocketAddr:'ws://121.41.123.2:5000',
+                NODE:'http://121.41.123.2:5000',
+                NODE_FILE:'http://121.41.123.2:8000/',
+                Technologies:[
+                    {id:1,name:'吐槽空间'},
+                    {id:186,name:'C语言专区'},
+                    {id:187,name:'C++专区'},
+                    {id:188,name:'Java技术专区'},
+                    {id:189,name:'Android技术专区'},
+                    {id:190,name:'ios苹果专区'}
+                ]
+            };
+        }else if(host == "115.28.91.11"){
+            return{
+                NODE_FILE:'http://115.28.91.11:8000/'
+            };
+    }else{
+            return {
+                NODE_FILE:'http://localhost:8000/'
+            };
+            console.log('here1');
+        }
+    });
+    app.controller('LoginCtrl',function($scope,$http,$window,qUrl){
+        $scope.logregs = [
+            {name:"注册",labelid:"radio-01",url:'reg'},
+            {name:"登录",labelid:"radio-02",url:'login'}
+        ];
+        $scope.selectedLogreg = $scope.logregs[0];
+
+        $scope.inputs = [
+            {label:'用户名',type:'text',ngm:'username'},
+            {label:'密码',type:'password',ngm:'pass'},
+            {label:'重复密码',type:'password',ngm:'pass1'}
+        ];
+
+        $scope.models = {
+            username:'',
+            pass:'',
+            pass1:''
+        };
+
+        $scope.changeR = function(){
+            console.log($scope.selectedLogreg);
+            if($scope.selectedLogreg.name == "注册"){
+                $scope.inputs = [
+                    {label:'用户名',type:'text',ngm:'username'},
+                    {label:'密码',type:'password',ngm:'pass'},
+                    {label:'重复密码',type:'password',ngm:'pass1'}
+                ];
+            }else if($scope.selectedLogreg.name == "登录"){
+                $scope.inputs = [
+                    {label:'用户名',type:'text',ngm:'username'},
+                    {label:'密码',type:'password',ngm:'pass'}
+                ];
+            }
+        };
+
+        $scope.tijiao = function(){
+            var msg = {
+                username:$scope.models.username,
+                pass:$scope.models.pass,
+                pass1:$scope.models.pass1
+            };
+            $http.post(qUrl.NODE_FILE + $scope.selectedLogreg.url,
+                    msg
+            ).success(function(data,status,headers,config){
+                //如果登录成功，进行跳转
+                if($scope.selectedLogreg.url == 'login'){
+                    console.log('in login');
+                    if(data.code == 1){
+                        $window.location.href = '/filesite.html';
+                    }
+                }
+                console.log('success');
+            });
+        };
+    });
+
+</script>
+</html>
