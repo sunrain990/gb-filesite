@@ -8,6 +8,7 @@ var express = require('express'),
     https = require('https'),
     Mysql = require('../models/my'),
     router = express.Router();
+var iconv = require('iconv-lite');
 //var packagetoken = require('../exports/packagetoken');
 var http = require('http');
 
@@ -590,9 +591,16 @@ router.post('/packageallfiles',function(req,res,next){
                     return base64ToUrlSafe(encoded);
                 };
 
+                var urlsafeBase64Encode1 = function(jsonFlags) {
+                    //var encoded = new Buffer(jsonFlags,'utf8').toString('base64');
+
+                    var encoded = iconv.encode(jsonFlags, 'gbk').toString('base64');
+                    return base64ToUrlSafe(encoded);
+                };
+
                 var generatefop = function(arr){
                     var brr = arr.map(function(e){
-                        return '/url/'+urlsafeBase64Encode(e.url);
+                        return '/url/'+urlsafeBase64Encode(e.url)+'/alias/'+urlsafeBase64Encode1(e.file);
                     });
                     var tempstr="";
                     brr.forEach(function(b){
@@ -618,7 +626,8 @@ router.post('/packageallfiles',function(req,res,next){
                     //fops:'mkzip/2/url/aHR0cDovLzd4bm1mZS5jb20xLnowLmdsYi5jbG91ZGRuLmNvbS9zY29ybjEuZ2lm|saveas/Z2VtaW5ubzp0dHQuemlw'
                     fops:'mkzip/2'+generatefop(result)+saveas('geminno:'+scollectiontitle)
                     ,
-                    notifyURL:'http://121.41.41.46:8000/filesite/filespacked'
+                    //notifyURL:'http://121.41.41.46:8000/filesite/filespacked'
+                    notifyURL:'http://121.41.123.2:8000/filesite/filespacked'
                     //notifyURL:'http://121.41.123.2:8000/filesite/testpost'
                 };
 
@@ -796,7 +805,7 @@ router.post('/packagealldocs',function(req,res,next){
         arrstr = arrstr.substring(0,arrstr.length-1)+')';
 
 //select url from file where id in (select file from schedule where id in (select scheduleid from scollection_schedule where scollectionid=7))
-        var querydownnames = 'select url from file where id in '+arrstr;
+        var querydownnames = 'select file,url from file where id in '+arrstr;
 //select url from file where id in (select file from schedule where id in (select scheduleid from scollection_schedule where scollectionid=7))
 //        var querydownnames = 'select url from file where id in (select doc from schedule where id in (select scheduleid from scollection_schedule where scollectionid='+scollectionid+'))';
         Mysql.project.query(querydownnames,function(err,result){
@@ -827,9 +836,16 @@ router.post('/packagealldocs',function(req,res,next){
                     return base64ToUrlSafe(encoded);
                 };
 
+                var urlsafeBase64Encode1 = function(jsonFlags) {
+                    //var encoded = new Buffer(jsonFlags,'utf8').toString('base64');
+
+                    var encoded = iconv.encode(jsonFlags, 'gbk').toString('base64');
+                    return base64ToUrlSafe(encoded);
+                };
+
                 var generatefop = function(arr){
                     var brr = arr.map(function(e){
-                        return '/url/'+urlsafeBase64Encode(e.url);
+                        return '/url/'+urlsafeBase64Encode(e.url)+'/alias/'+urlsafeBase64Encode1(e.file);
                     });
                     var tempstr="";
                     brr.forEach(function(b){
@@ -839,7 +855,7 @@ router.post('/packagealldocs',function(req,res,next){
                 };
 
                 var saveas = function(str){
-                    return '|saveas/'+ urlsafeBase64Encode(str)
+                    return '|saveas/'+ urlsafeBase64Encode(str);
                 };
 
                 scollectiontitle = scollectiontitle+moment().format('YYYY-MM-DD-hh-mm-ss')+'docs.zip';
@@ -855,7 +871,8 @@ router.post('/packagealldocs',function(req,res,next){
                     //fops:'mkzip/2/url/aHR0cDovLzd4bm1mZS5jb20xLnowLmdsYi5jbG91ZGRuLmNvbS9zY29ybjEuZ2lm|saveas/Z2VtaW5ubzp0dHQuemlw'
                     fops:'mkzip/2'+generatefop(result)+saveas('geminno:'+scollectiontitle)
                     ,
-                    notifyURL:'http://121.41.41.46:8000/filesite/docspacked'
+                    //notifyURL:'http://121.41.41.46:8000/filesite/docspacked'
+                    notifyURL:'http://121.41.123.2:8000/filesite/docspacked'
                     //notifyURL:'http://121.41.123.2:8000/filesite/testpost'
                 };
 
