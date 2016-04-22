@@ -75,6 +75,15 @@ function handleError () {
             throw err;
         }
     });
+
+    setInterval(function(){
+        conn.query('SELECT 1 + 1 AS solution', function(err, rows, fields) {
+            if (err) throw err;
+
+            console.log('The solution is: ', rows[0].solution);
+        });
+    },3600000);
+    console.log('mysql ready!');
 }
 handleError();
 
