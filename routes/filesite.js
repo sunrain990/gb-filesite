@@ -234,6 +234,7 @@ router.post('/packageall',function(req,res,next){
                 //fops:'mkzip/2/url/aHR0cDovLzd4bm1mZS5jb20xLnowLmdsYi5jbG91ZGRuLmNvbS9zY29ybjEuZ2lm|saveas/Z2VtaW5ubzp0dHQuemlw'
                 fops:'mkzip/2'+generatefop(result)+saveas('geminno:'+scollectiontitle)
                 ,
+                pipeline:'myqueue',
                 notifyURL:'http://121.41.41.46:8000/filesite/testpost'
                 //notifyURL:'http://121.41.123.2:8000/filesite/testpost'
             };
@@ -626,6 +627,7 @@ router.post('/packageallfiles',function(req,res,next){
                     //fops:'mkzip/2/url/aHR0cDovLzd4bm1mZS5jb20xLnowLmdsYi5jbG91ZGRuLmNvbS9zY29ybjEuZ2lm|saveas/Z2VtaW5ubzp0dHQuemlw'
                     fops:'mkzip/2'+generatefop(result)+saveas('geminno:'+scollectiontitle)
                     ,
+                    pipeline:'myqueue',
                     //notifyURL:'http://121.41.41.46:8000/filesite/filespacked'
                     notifyURL:'http://121.41.123.2:8000/filesite/filespacked'
                     //notifyURL:'http://121.41.123.2:8000/filesite/testpost'
@@ -871,6 +873,7 @@ router.post('/packagealldocs',function(req,res,next){
                     //fops:'mkzip/2/url/aHR0cDovLzd4bm1mZS5jb20xLnowLmdsYi5jbG91ZGRuLmNvbS9zY29ybjEuZ2lm|saveas/Z2VtaW5ubzp0dHQuemlw'
                     fops:'mkzip/2'+generatefop(result)+saveas('geminno:'+scollectiontitle)
                     ,
+                    pipeline:'myqueue',
                     //notifyURL:'http://121.41.41.46:8000/filesite/docspacked'
                     notifyURL:'http://121.41.123.2:8000/filesite/docspacked'
                     //notifyURL:'http://121.41.123.2:8000/filesite/testpost'
