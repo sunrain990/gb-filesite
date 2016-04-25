@@ -563,7 +563,7 @@ router.post('/packageallfiles',function(req,res,next){
 
 
 //select url from file where id in (select file from schedule where id in (select scheduleid from scollection_schedule where scollectionid=7))
-        var querydownnames = 'select url from file where id in '+arrstr;
+        var querydownnames = 'select url,file from file where id in '+arrstr;
         Mysql.project.query(querydownnames,function(err,result){
             if(!err){
 
