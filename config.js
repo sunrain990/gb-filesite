@@ -7,5 +7,5 @@ module.exports = {
     'Bucket_Name': 'geminno',
     'Port': 19110,
     'Uptoken_Url': '/uptoken',
-    'Domain': 'http://7xnmfe.com1.z0.glb.clouddn.com/'
+    'Domain': 'http://files.xmgc360.com/'
 };
